@@ -8,7 +8,7 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   FunnelIcon,
-  RefreshIcon
+  ArrowPathIcon
 } from "@heroicons/react/24/outline";
 
 interface SignalFeedProps {
@@ -128,7 +128,7 @@ export function SignalFeed({
             className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
             title="Refresh signals"
           >
-            <RefreshIcon className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <ArrowPathIcon className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
 
           {/* Filter button */}
@@ -158,7 +158,7 @@ export function SignalFeed({
               <select
                 value={localFilter.signalType || 'ALL'}
                 onChange={(e) => updateFilter('signalType', e.target.value === 'ALL' ? null : e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full px-3 py-2 border border-solid border-gray-200 rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="ALL">All Types</option>
                 <option value="BUY">Buy</option>
@@ -175,7 +175,7 @@ export function SignalFeed({
               <select
                 value={localFilter.riskLevel || 'ALL'}
                 onChange={(e) => updateFilter('riskLevel', e.target.value === 'ALL' ? null : e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full px-3 py-2 border border-solid border-gray-200 rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="ALL">All Levels</option>
                 <option value="LOW">Low Risk</option>
@@ -210,7 +210,7 @@ export function SignalFeed({
                 placeholder="e.g., BTC, ETH"
                 value={localFilter.pair || ''}
                 onChange={(e) => updateFilter('pair', e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full px-3 py-2 border border-solid border-gray-200 rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           </div>

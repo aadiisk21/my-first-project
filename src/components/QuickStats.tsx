@@ -3,8 +3,8 @@
 import React from "react";
 import { useTradingStore } from "@/stores/useTradingStore";
 import {
-  TrendingUpIcon,
-  TrendingDownIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
   CurrencyDollarIcon,
   ChartBarIcon,
   ClockIcon,
@@ -41,7 +41,7 @@ export function QuickStats() {
       name: "Market Change",
       value: `${avgChange >= 0 ? '+' : ''}${avgChange.toFixed(2)}%`,
       change: avgChange,
-      icon: avgChange >= 0 ? TrendingUpIcon : TrendingDownIcon,
+      icon: avgChange >= 0 ? ArrowTrendingUpIcon : ArrowTrendingDownIcon,
       color: avgChange >= 0 ? "text-green-600" : "text-red-600",
       bgColor: avgChange >= 0 ? "bg-green-100 dark:bg-green-900/20" : "bg-red-100 dark:bg-red-900/20"
     },
@@ -97,7 +97,7 @@ export function QuickStats() {
 
             {/* Additional context for specific stats */}
             {stat.name === "Market Change" && totalPairs > 0 && (
-              <div className="mt-4 pt-4 border-t border-border">
+              <div className="mt-4 pt-4 border-t border-solid border-gray-200">
                 <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground">Up: {positivePairs}</span>
                   <span className="text-muted-foreground">Down: {negativePairs}</span>
@@ -112,7 +112,7 @@ export function QuickStats() {
             )}
 
             {stat.name === "Active Signals" && totalSignals > 0 && (
-              <div className="mt-4 pt-4 border-t border-border">
+              <div className="mt-4 pt-4 border-t border-solid border-gray-200">
                 <p className="text-xs text-muted-foreground">
                   Total Generated: {totalSignals}
                 </p>
