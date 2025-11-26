@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --primary: #0066ff;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f8fafc;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #0066ff;
+  --buy: #22c55e;
+  --sell: #ef4444;
+  --hold: #64748b;
+  --chart-1: #0066ff;
+  --chart-2: #8b5cf6;
+  --chart-3: #06b6d4;
+  --chart-4: #f59e0b;
+  --chart-5: #10b981;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --primary: #1a8cff;
+  --primary-foreground: #ffffff;
+  --secondary: #1e293b;
+  --secondary-foreground: #f8fafc;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #1e293b;
+  --accent-foreground: #f8fafc;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #334155;
+  --input: #334155;
+  --ring: #1a8cff;
+  --buy: #34d399;
+  --sell: #f87171;
+  --hold: #94a3b8;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .signal-buy {
+    @apply bg-buy/10 text-buy border-buy/20;
+  }
+
+  .signal-sell {
+    @apply bg-sell/10 text-sell border-sell/20;
+  }
+
+  .signal-hold {
+    @apply bg-hold/10 text-hold border-hold/20;
+  }
+
+  .price-up {
+    @apply text-buy;
+  }
+
+  .price-down {
+    @apply text-sell;
+  }
+
+  .glass-effect {
+    @apply bg-background/80 backdrop-blur-sm border-border/50;
+  }
+
+  .trading-card {
+    @apply rounded-lg border bg-card text-card-foreground shadow-sm;
+  }
+
+  .confidence-bar {
+    @apply h-2 rounded-full bg-muted overflow-hidden;
+  }
+
+  .confidence-fill {
+    @apply h-full rounded-full transition-all duration-300 ease-in-out;
+  }
+
+  .chart-container {
+    @apply relative w-full h-full min-h-[400px] bg-background rounded-lg border border-border;
+  }
+}
+
+@layer utilities {
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .glow {
+    box-shadow: 0 0 20px rgba(0, 102, 255, 0.3);
+  }
+
+  .signal-glow-buy {
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+  }
+
+  .signal-glow-sell {
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+  }
+}
