@@ -44,5 +44,8 @@
     "tailwindcss": "^4",
     "autoprefixer": "10.4.20",
     "typescript": "^5"
+  },
+  "engines": {
+  "node": "20"
   }
 }
