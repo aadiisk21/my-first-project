@@ -1,8 +1,11 @@
 @import "tailwindcss";
-@plugin "@tailwindcss/forms";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* REMOVE this (not allowed)
+@plugin "@tailwindcss/forms";
+*/
 
 :root {
   --background: #ffffff;
