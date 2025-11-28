@@ -58,8 +58,6 @@ export async function connectRedis(): Promise<RedisClientType> {
     });
 
     await redisClient.connect();
-
-    // Test the connection
     await redisClient.ping();
 
     logger.info('✅ Redis connected successfully');
@@ -102,9 +100,7 @@ export class CacheService {
   async get<T = any>(key: string): Promise<T | null> {
     try {
       const value = await this.client.get(key);
-      if (value === null) {
-        return null;
-      }
+      if (value === null) return null;
       return JSON.parse(value) as T;
     } catch (error) {
       logger.error(`Cache get error for key ${key}:`, error);
@@ -112,9 +108,10 @@ export class CacheService {
     }
   }
 
-  async del(key: string): Promise<number> {
+  async del(key: string): Promise<boolean> {
     try {
-      return await this.client.del(key);
+      const result = await this.client.del(key);
+      return result > 0;
     } catch (error) {
       logger.error(`Cache delete error for key ${key}:`, error);
       throw error;
@@ -157,7 +154,7 @@ export class CacheService {
   async expire(key: string, ttlSeconds: number): Promise<boolean> {
     try {
       const result = await this.client.expire(key, ttlSeconds);
-      return result;
+      return result === 1;
     } catch (error) {
       logger.error(`Cache expire error for key ${key}:`, error);
       return false;
@@ -178,7 +175,7 @@ export class CacheService {
     symbol: string,
     timeframe: string,
     data: any[],
-    ttlSeconds: number = 300 // 5 minutes
+    ttlSeconds: number = 300
   ): Promise<void> {
     const key = `market_data:${symbol}:${timeframe}`;
     await this.set(key, data, ttlSeconds);
@@ -192,7 +189,7 @@ export class CacheService {
   // Signal caching
   async cacheSignals(
     signals: any[],
-    ttlSeconds: number = 1800 // 30 minutes
+    ttlSeconds: number = 1800
   ): Promise<void> {
     const key = 'signals:active';
     await this.set(key, signals, ttlSeconds);
@@ -214,7 +211,7 @@ export class CacheService {
     return this.get(key);
   }
 
-  async deleteUserSession(userId: string): Promise<number> {
+  async deleteUserSession(userId: string): Promise<boolean> {
     const key = `session:${userId}`;
     return this.del(key);
   }
@@ -229,10 +226,8 @@ export class CacheService {
     const now = Math.floor(Date.now() / 1000);
     const windowStart = now - windowSeconds;
 
-    // Remove expired entries
     await this.client.zRemRangeByScore(key, 0, windowStart);
 
-    // Count current requests
     const current = await this.client.zCard(key);
 
     if (current >= maxRequests) {
@@ -244,7 +239,6 @@ export class CacheService {
       };
     }
 
-    // Add current request
     await this.client.zAdd(key, [{ score: now, value: now.toString() }]);
     await this.client.expire(key, windowSeconds);
 
@@ -259,7 +253,7 @@ export class CacheService {
   async addWebSocketConnection(userId: string, socketId: string): Promise<void> {
     const key = `websocket:${userId}`;
     await this.client.sAdd(key, socketId);
-    await this.client.expire(key, 3600); // 1 hour TTL
+    await this.client.expire(key, 3600);
   }
 
   async removeWebSocketConnection(userId: string, socketId: string): Promise<void> {
