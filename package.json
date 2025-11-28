@@ -36,16 +36,17 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.17",
     "@types/node": "^20",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "autoprefixer": "10.4.20",
     "eslint": "^9",
     "eslint-config-next": "16.0.4",
     "tailwindcss": "^4",
-    "autoprefixer": "10.4.20",
     "typescript": "^5"
   },
   "engines": {
-  "node": "20"
+    "node": "20"
   }
 }
