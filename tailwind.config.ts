@@ -1,7 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
-  darkMode: 'class', // This will be handled by CSS variable instead
+  darkMode: 'class',
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -10,52 +10,59 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        border: 'hsl(var(--border) / 0.2)',
-        input: 'hsl(var(--input) / 0.2)',
-        ring: 'hsl(var(--ring) / 0.2)',
-        background: 'hsl(var(--background) / 0.2)',
-        foreground: 'hsl(var(--foreground) / 0.2)',
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
         primary: {
-          DEFAULT: 'hsl(var(--primary) / 0.2)',
-          foreground: 'hsl(var(--primary-foreground) / 0.2)',
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
         },
         secondary: {
-          DEFAULT: 'hsl(var(--secondary) / 0.2)',
-          foreground: 'hsl(var(--secondary-foreground) / 0.2)',
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
         },
         destructive: {
-          DEFAULT: 'hsl(var(--destructive) / 0.2)',
-          foreground: 'hsl(var(--destructive-foreground) / 0.2)',
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))',
         },
         muted: {
-          DEFAULT: 'hsl(var(--muted) / 0.2)',
-          foreground: 'hsl(var(--muted-foreground) / 0.2)',
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))',
         },
         accent: {
-          DEFAULT: 'hsl(var(--accent) / 0.2)',
-          foreground: 'hsl(var(--accent-foreground) / 0.2)',
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
         },
-        buy: 'hsl(var(--buy) / 0.2)',
-        sell: 'hsl(var(--sell) / 0.2)',
-        hold: 'hsl(var(--hold) / 0.2)',
+
+        // Custom colors (without opacity)
+        buy: 'hsl(var(--buy))',
+        sell: 'hsl(var(--sell))',
+        hold: 'hsl(var(--hold))',
+
         chart: {
-          1: 'hsl(var(--chart-1) / 0.2)',
-          2: 'hsl(var(--chart-2) / 0.2)',
-          3: 'hsl(var(--chart-3) / 0.2)',
-          4: 'hsl(var(--chart-4) / 0.2)',
-          5: 'hsl(var(--chart-5) / 0.2)',
+          1: 'hsl(var(--chart-1))',
+          2: 'hsl(var(--chart-2))',
+          3: 'hsl(var(--chart-3))',
+          4: 'hsl(var(--chart-4))',
+          5: 'hsl(var(--chart-5))',
         },
-        card: 'hsl(var(--card) / 0.2)',
-        'card-foreground': 'hsl(var(--card-foreground) / 0.2)',
+
+        card: 'hsl(var(--card))',
+        'card-foreground': 'hsl(var(--card-foreground))',
       },
+
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
+
       fontFamily: {
         sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
       },
+
       keyframes: {
         'accordion-down': {
           from: { height: 0 },
@@ -66,11 +73,13 @@ const config: Config = {
           to: { height: 'var(--radix-accordion-content-height)' },
         },
       },
+
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
       },
     },
+  },
   plugins: [],
 } satisfies Config;
 
