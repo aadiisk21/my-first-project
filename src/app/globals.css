@@ -3,72 +3,67 @@
 @tailwind components;
 @tailwind utilities;
 
-/* REMOVE this (not allowed)
-@plugin "@tailwindcss/forms";
-*/
-
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --primary: #0066ff;
-  --primary-foreground: #ffffff;
-  --secondary: #f1f5f9;
-  --secondary-foreground: #0f172a;
-  --muted: #f8fafc;
-  --muted-foreground: #64748b;
-  --accent: #f1f5f9;
-  --accent-foreground: #0f172a;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #0066ff;
-  --buy: #22c55e;
-  --sell: #ef4444;
-  --hold: #64748b;
-  --chart-1: #0066ff;
-  --chart-2: #8b5cf6;
-  --chart-3: #06b6d4;
-  --chart-4: #f59e0b;
-  --chart-5: #10b981;
+  /* Core Colors */
+  --background: 255 255 255;
+  --foreground: 23 23 23;
+  --primary: 0 102 255;
+  --primary-foreground: 255 255 255;
+  --secondary: 241 245 249;
+  --secondary-foreground: 15 23 42;
+  --muted: 248 250 252;
+  --muted-foreground: 100 116 139;
+  --accent: 241 245 249;
+  --accent-foreground: 15 23 42;
+  --destructive: 239 68 68;
+  --destructive-foreground: 255 255 255;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 0 102 255;
+  --buy: 34 197 94;
+  --sell: 239 68 68;
+  --hold: 100 116 139;
+  --chart-1: 0 102 255;
+  --chart-2: 139 92 246;
+  --chart-3: 6 182 212;
+  --chart-4: 245 158 11;
+  --chart-5: 16 185 129;
 }
 
 .dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --primary: #1a8cff;
-  --primary-foreground: #ffffff;
-  --secondary: #1e293b;
-  --secondary-foreground: #f8fafc;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --accent: #1e293b;
-  --accent-foreground: #f8fafc;
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
-  --border: #334155;
-  --input: #334155;
-  --ring: #1a8cff;
-  --buy: #34d399;
-  --sell: #f87171;
-  --hold: #94a3b8;
+  --background: 10 10 10;
+  --foreground: 237 237 237;
+  --primary: 26 140 255;
+  --primary-foreground: 255 255 255;
+  --secondary: 30 41 59;
+  --secondary-foreground: 248 250 252;
+  --muted: 30 41 59;
+  --muted-foreground: 148 163 184;
+  --accent: 30 41 59;
+  --accent-foreground: 248 250 252;
+  --destructive: 220 38 38;
+  --destructive-foreground: 255 255 255;
+  --border: 51 65 85;
+  --input: 51 65 85;
+  --ring: 26 140 255;
+  --buy: 52 211 153;
+  --sell: 248 113 113;
+  --hold: 148 163 184;
 }
 
 @layer base {
-  * {
-    border-color: var(--border);
-  }
+  * { border-color: rgb(var(--border)); }
   body {
-    background-color: var(--background);
-    color: var(--foreground);
+    background-color: rgb(var(--background));
+    color: rgb(var(--foreground));
   }
 }
 
 @layer components {
   .signal-buy {
-    background-color: var(--buy);
-    color: var(--primary-foreground);
-    border: 2px solid var(--buy);
+    background-color: rgb(var(--buy));
+    color: rgb(var(--primary-foreground));
+    border: 2px solid rgb(var(--buy));
   }
 
   .signal-sell {
@@ -79,55 +74,30 @@
     @apply bg-hold/10 text-hold border-hold/20;
   }
 
-  .price-up {
-    @apply text-buy;
-  }
+  .price-up { @apply text-buy; }
+  .price-down { @apply text-sell; }
 
-  .price-down {
-    @apply text-sell;
-  }
+  .glass-effect { @apply bg-background/80 backdrop-blur-sm border-border/50; }
 
-  .glass-effect {
-    @apply bg-background/80 backdrop-blur-sm border-border/50;
-  }
+  .trading-card { @apply rounded-lg border bg-card text-card-foreground shadow-sm; }
 
-  .trading-card {
-    @apply rounded-lg border bg-card text-card-foreground shadow-sm;
-  }
-
-  .confidence-bar {
-    @apply h-2 rounded-full bg-muted overflow-hidden;
-  }
-
-  .confidence-fill {
-    @apply h-full rounded-full transition-all duration-300 ease-in-out;
-  }
+  .confidence-bar { @apply h-2 rounded-full bg-muted overflow-hidden; }
+  .confidence-fill { @apply h-full rounded-full transition-all duration-300 ease-in-out; }
 
   .chart-container {
     position: relative;
     width: 100%;
     height: 100%;
     min-height: 400px;
-    background-color: var(--background);
+    background-color: rgb(var(--background));
     border-radius: var(--radius);
-    border: 1px solid var(--border);
+    border: 1px solid rgb(var(--border));
   }
 }
 
 @layer utilities {
-  .text-shadow {
-    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-
-  .glow {
-    box-shadow: 0 0 20px rgba(0, 102, 255, 0.3);
-  }
-
-  .signal-glow-buy {
-    box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
-  }
-
-  .signal-glow-sell {
-    box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
-  }
+  .text-shadow { text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+  .glow { box-shadow: 0 0 20px rgba(0, 102, 255, 0.3); }
+  .signal-glow-buy { box-shadow: 0 0 15px rgba(34, 197, 94, 0.3); }
+  .signal-glow-sell { box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
 }

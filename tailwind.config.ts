@@ -1,4 +1,4 @@
-import type { Config } from 'tailwindcss';
+import type { Config } from 'tailwindcss'
 
 const config: Config = {
   darkMode: 'class',
@@ -36,10 +36,13 @@ const config: Config = {
           foreground: 'hsl(var(--accent-foreground))',
         },
 
-        // Custom colors (without opacity)
-        buy: 'hsl(var(--buy))',
-        sell: 'hsl(var(--sell))',
-        hold: 'hsl(var(--hold))',
+        // Type-safe alpha-compatible colors
+        buy: ({ opacityValue }: { opacityValue?: string }) =>
+          opacityValue ? `rgb(var(--buy) / ${opacityValue})` : `rgb(var(--buy))`,
+        sell: ({ opacityValue }: { opacityValue?: string }) =>
+          opacityValue ? `rgb(var(--sell) / ${opacityValue})` : `rgb(var(--sell))`,
+        hold: ({ opacityValue }: { opacityValue?: string }) =>
+          opacityValue ? `rgb(var(--hold) / ${opacityValue})` : `rgb(var(--hold))`,
 
         chart: {
           1: 'hsl(var(--chart-1))',
@@ -81,6 +84,6 @@ const config: Config = {
     },
   },
   plugins: [],
-} satisfies Config;
+} satisfies Config
 
-export default config;
+export default config
