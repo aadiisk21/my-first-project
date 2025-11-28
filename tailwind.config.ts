@@ -1,4 +1,4 @@
-import type { Config } from 'tailwindcss'
+import type { Config } from 'tailwindcss';
 
 const config: Config = {
   darkMode: 'class',
@@ -15,6 +15,7 @@ const config: Config = {
         ring: 'hsl(var(--ring))',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
+
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
@@ -36,13 +37,43 @@ const config: Config = {
           foreground: 'hsl(var(--accent-foreground))',
         },
 
-        // Type-safe alpha-compatible colors
-        buy: ({ opacityValue }: { opacityValue?: string }) =>
-          opacityValue ? `rgb(var(--buy) / ${opacityValue})` : `rgb(var(--buy))`,
-        sell: ({ opacityValue }: { opacityValue?: string }) =>
-          opacityValue ? `rgb(var(--sell) / ${opacityValue})` : `rgb(var(--sell))`,
-        hold: ({ opacityValue }: { opacityValue?: string }) =>
-          opacityValue ? `rgb(var(--hold) / ${opacityValue})` : `rgb(var(--hold))`,
+        // ✅ Buy/Sell/Hold with fixed opacity classes
+        buy: {
+          50: 'rgb(var(--buy) / 0.05)',
+          100: 'rgb(var(--buy) / 0.1)',
+          200: 'rgb(var(--buy) / 0.2)',
+          300: 'rgb(var(--buy) / 0.3)',
+          400: 'rgb(var(--buy) / 0.4)',
+          500: 'rgb(var(--buy) / 0.5)',
+          600: 'rgb(var(--buy) / 0.6)',
+          700: 'rgb(var(--buy) / 0.7)',
+          800: 'rgb(var(--buy) / 0.8)',
+          900: 'rgb(var(--buy) / 0.9)',
+        },
+        sell: {
+          50: 'rgb(var(--sell) / 0.05)',
+          100: 'rgb(var(--sell) / 0.1)',
+          200: 'rgb(var(--sell) / 0.2)',
+          300: 'rgb(var(--sell) / 0.3)',
+          400: 'rgb(var(--sell) / 0.4)',
+          500: 'rgb(var(--sell) / 0.5)',
+          600: 'rgb(var(--sell) / 0.6)',
+          700: 'rgb(var(--sell) / 0.7)',
+          800: 'rgb(var(--sell) / 0.8)',
+          900: 'rgb(var(--sell) / 0.9)',
+        },
+        hold: {
+          50: 'rgb(var(--hold) / 0.05)',
+          100: 'rgb(var(--hold) / 0.1)',
+          200: 'rgb(var(--hold) / 0.2)',
+          300: 'rgb(var(--hold) / 0.3)',
+          400: 'rgb(var(--hold) / 0.4)',
+          500: 'rgb(var(--hold) / 0.5)',
+          600: 'rgb(var(--hold) / 0.6)',
+          700: 'rgb(var(--hold) / 0.7)',
+          800: 'rgb(var(--hold) / 0.8)',
+          900: 'rgb(var(--hold) / 0.9)',
+        },
 
         chart: {
           1: 'hsl(var(--chart-1))',
@@ -84,6 +115,6 @@ const config: Config = {
     },
   },
   plugins: [],
-} satisfies Config
+} satisfies Config;
 
-export default config
+export default config;
