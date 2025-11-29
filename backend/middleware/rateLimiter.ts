@@ -10,8 +10,8 @@ export const rateLimiter = rateLimit({
     error: 'Too many requests from this IP, please try again later',
     retryAfter: '15 minutes'
   },
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  standardHeaders: true,
+  legacyHeaders: false,
   handler: (req: Request, res: Response) => {
     res.status(429).json({
       success: false,
@@ -26,7 +26,7 @@ export const rateLimiter = rateLimit({
 // Strict rate limiting for sensitive endpoints
 export const strictRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 requests per windowMs
+  max: 5,
   message: {
     success: false,
     error: 'Too many requests to this endpoint, please try again later',
@@ -39,23 +39,23 @@ export const strictRateLimiter = rateLimit({
 
 // WebSocket connection rate limiting
 export const wsRateLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 30, // Limit each IP to 30 WebSocket connections per minute
+  windowMs: 60 * 1000,
+  max: 30,
   message: {
     success: false,
     error: 'Too many WebSocket connections, please try again later'
   },
-  keyGenerator: (req: Request) => {
-    return req.ip || 'unknown';
+  keyGenerator: (req: Request): string => {
+    return req.ip ?? 'unknown';
   }
 });
 
 // Trading signal rate limiting (per user)
 export const signalRateLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 10, // Limit each user to 10 signal requests per minute
-  keyGenerator: (req: Request) => {
-    return req.headers['x-user-id'] as string || req.ip;
+  windowMs: 60 * 1000,
+  max: 10,
+  keyGenerator: (req: Request): string => {
+    return (req.headers['x-user-id'] as string) ?? req.ip ?? 'anonymous';
   },
   message: {
     success: false,
