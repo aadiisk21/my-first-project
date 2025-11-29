@@ -47,7 +47,8 @@ export function SignalFeed({
     let filteredSignals = [...signals];
 
     // Apply local filters
-    if (localFilter.signalType && localFilter.signalType !== 'ALL') {
+    // signalType will be undefined/null when 'All' is selected, otherwise one of 'BUY'|'SELL'|'HOLD'
+    if (localFilter.signalType) {
       filteredSignals = filteredSignals.filter(s => s.signalType === localFilter.signalType);
     }
 
@@ -157,7 +158,7 @@ export function SignalFeed({
               </label>
               <select
                 value={localFilter.signalType || 'ALL'}
-                onChange={(e) => updateFilter('signalType', e.target.value === 'ALL' ? null : e.target.value)}
+                onChange={(e) => updateFilter('signalType', e.target.value === 'ALL' ? undefined : (e.target.value as 'BUY' | 'SELL' | 'HOLD'))}
                 className="w-full px-3 py-2 border border-solid border-gray-200 rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="ALL">All Types</option>
@@ -174,7 +175,7 @@ export function SignalFeed({
               </label>
               <select
                 value={localFilter.riskLevel || 'ALL'}
-                onChange={(e) => updateFilter('riskLevel', e.target.value === 'ALL' ? null : e.target.value)}
+                onChange={(e) => updateFilter('riskLevel', e.target.value === 'ALL' ? undefined : (e.target.value as 'LOW' | 'MEDIUM' | 'HIGH'))}
                 className="w-full px-3 py-2 border border-solid border-gray-200 rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="ALL">All Levels</option>
