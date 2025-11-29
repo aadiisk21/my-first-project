@@ -40,6 +40,7 @@
     "@types/bcryptjs": "^3.0.0",
     "@types/express": "^5.0.5",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/morgan": "^1.9.10",
     "@types/node": "^20",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
