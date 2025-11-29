@@ -60,8 +60,10 @@ export function SignalFeed({
       filteredSignals = filteredSignals.filter(s => s.confidence >= localFilter.minConfidence!);
     }
 
-    if (localFilter.pair) {
-      filteredSignals = filteredSignals.filter(s => s.pair.includes(localFilter.pair.toUpperCase()));
+    const pairQuery = localFilter.pair;
+    if (pairQuery && pairQuery.length > 0) {
+      const q = pairQuery.toUpperCase();
+      filteredSignals = filteredSignals.filter(s => s.pair.includes(q));
     }
 
     // Filter expired signals if needed
