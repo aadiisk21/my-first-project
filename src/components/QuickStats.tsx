@@ -31,7 +31,7 @@ export function QuickStats() {
   const stats = [
     {
       name: "Active Pairs",
-      value: totalPairs.toLocaleString(),
+      value: totalPairs.toLocaleString('en-US'),
       change: null,
       icon: ChartBarIcon,
       color: "text-blue-600",

@@ -26,9 +26,15 @@ export function TradingChart({
   const [chartSize, setChartSize] = useState({ width: 800, height: 400 });
   const [hoveredCandle, setHoveredCandle] = useState<number | null>(null);
 
-  const marketData = useTradingStore((state) => state.marketData[symbol] || []);
-  const technicalIndicators = useTradingStore((state) => state.technicalIndicators[symbol]);
-  const currentPrice = useTradingStore((state) => state.currentPrices[symbol]);
+    // Selectors should not create new objects/arrays (e.g. `|| []`) because
+    // useSyncExternalStore expects stable snapshots - returning freshly created
+    // arrays each call can trigger an infinite update loop. We return the
+    // stored reference (may be undefined) and default to an empty array/local
+    // value inside the component where needed.
+    const marketData = useTradingStore((state) => state.marketData[symbol]);
+    const technicalIndicators = useTradingStore((state) => state.technicalIndicators[symbol]);
+    const currentPrice = useTradingStore((state) => state.currentPrices[symbol]);
+    const md = marketData ?? [];
 
   // Resize handler
   useEffect(() => {
@@ -49,7 +55,7 @@ export function TradingChart({
   // Custom chart drawing logic
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || marketData.length === 0) return;
+      if (!canvas || md.length === 0) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -68,10 +74,10 @@ export function TradingChart({
     const chartWidth = width - padding.left - padding.right;
     const chartHeight = height - padding.top - padding.bottom;
 
-    if (marketData.length === 0) return;
+      if (md.length === 0) return;
 
     // Calculate price range
-    const prices = marketData.flatMap(d => [d.high, d.low]);
+      const prices = md.flatMap(d => [d.high, d.low]);
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
     const priceRange = maxPrice - minPrice;
@@ -98,10 +104,10 @@ export function TradingChart({
     ctx.setLineDash([]);
 
     // Draw candlesticks
-    const candleWidth = Math.max(1, (chartWidth / marketData.length) * 0.6);
-    const candleSpacing = chartWidth / marketData.length;
+    const candleWidth = Math.max(1, (chartWidth / md.length) * 0.6);
+    const candleSpacing = chartWidth / md.length;
 
-    marketData.forEach((candle, index) => {
+    md.forEach((candle, index) => {
       const x = padding.left + index * candleSpacing + candleSpacing / 2;
       const yHigh = padding.top + ((maxPrice - candle.high) / priceRange) * chartHeight;
       const yLow = padding.top + ((maxPrice - candle.low) / priceRange) * chartHeight;
@@ -141,7 +147,7 @@ export function TradingChart({
 
       // Draw volume if enabled
       if (showVolume) {
-        const maxVolume = Math.max(...marketData.map(d => d.volume));
+          const maxVolume = Math.max(...md.map(d => d.volume));
         const volumeHeight = (candle.volume / maxVolume) * (chartHeight * 0.2);
         const volumeY = height - padding.bottom - volumeHeight;
 
@@ -221,8 +227,8 @@ export function TradingChart({
     }
 
     // Draw tooltip on hover
-    if (hoveredCandle !== null && hoveredCandle < marketData.length) {
-      const candle = marketData[hoveredCandle];
+    if (hoveredCandle !== null && hoveredCandle < md.length) {
+      const candle = md[hoveredCandle];
       const tooltipX = padding.left + hoveredCandle * candleSpacing + candleSpacing / 2;
       const tooltipY = padding.top + 20;
 
@@ -236,7 +242,7 @@ export function TradingChart({
         `H: ${candle.high.toFixed(4)}`,
         `L: ${candle.low.toFixed(4)}`,
         `C: ${candle.close.toFixed(4)}`,
-        `V: ${candle.volume.toLocaleString()}`
+        `V: ${candle.volume.toLocaleString('en-US')}`
       ];
 
       ctx.font = "11px monospace";
@@ -261,16 +267,16 @@ export function TradingChart({
   // Mouse move handler
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
-    if (!canvas || marketData.length === 0) return;
+    if (!canvas || md.length === 0) return;
 
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const padding = { top: 20, right: 60, bottom: 40, left: 10 };
     const chartWidth = canvas.width - padding.left - padding.right;
-    const candleSpacing = chartWidth / marketData.length;
+    const candleSpacing = chartWidth / md.length;
 
     const candleIndex = Math.floor((x - padding.left) / candleSpacing);
-    if (candleIndex >= 0 && candleIndex < marketData.length) {
+    if (candleIndex >= 0 && candleIndex < md.length) {
       setHoveredCandle(candleIndex);
     }
   };
@@ -290,7 +296,7 @@ export function TradingChart({
         <div className="text-xs text-muted-foreground">{timeframe}</div>
         {currentPrice && (
           <div className={`text-sm font-mono ${
-            marketData.length > 0 && currentPrice >= marketData[marketData.length - 1].close
+            md.length > 0 && currentPrice >= md[md.length - 1].close
               ? 'text-buy'
               : 'text-sell'
           }`}>
@@ -334,7 +340,7 @@ export function TradingChart({
         onMouseLeave={handleMouseLeave}
       />
 
-      {marketData.length === 0 && (
+      {md.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
           <div className="text-center">
             <div className="text-lg font-medium mb-2">No Data Available</div>

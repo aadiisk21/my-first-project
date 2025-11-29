@@ -60,11 +60,13 @@ export function SignalCard({
 
   // Format timestamp
   const formatTimestamp = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
+      // Use a deterministic timezone to avoid SSR/client locale mismatches
+      return new Intl.DateTimeFormat('en-US', {
       month: 'short',
       day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'UTC'
     }).format(date);
   };
 
@@ -144,7 +146,7 @@ export function SignalCard({
 
           <div className="text-right">
             <div className="text-lg font-semibold text-foreground">
-              ${signal.entryPrice.toLocaleString()}
+              ${signal.entryPrice.toLocaleString('en-US')}
             </div>
             <div className={`text-sm ${signalTypeStyle.text}`}>
               {signalTypeStyle.label}
@@ -213,7 +215,7 @@ export function SignalCard({
         <div>
           <div className="text-xs text-muted-foreground mb-1">Entry Price</div>
           <div className="font-semibold text-foreground">
-            ${signal.entryPrice.toLocaleString()}
+            ${signal.entryPrice.toLocaleString('en-US')}
           </div>
         </div>
 
@@ -221,7 +223,7 @@ export function SignalCard({
           <div>
             <div className="text-xs text-muted-foreground mb-1">Stop Loss</div>
             <div className="font-semibold text-red-600">
-              ${signal.stopLoss.toLocaleString()}
+              ${signal.stopLoss.toLocaleString('en-US')}
             </div>
           </div>
         )}
@@ -230,7 +232,7 @@ export function SignalCard({
           <div>
             <div className="text-xs text-muted-foreground mb-1">Take Profit</div>
             <div className="font-semibold text-green-600">
-              ${signal.takeProfit.toLocaleString()}
+              ${signal.takeProfit.toLocaleString('en-US')}
             </div>
           </div>
         )}

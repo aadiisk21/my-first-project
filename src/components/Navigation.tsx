@@ -42,6 +42,11 @@ export function Navigation() {
 
   const ThemeIcon = getThemeIcon();
 
+  // Provide a deterministic default for SSR/hydration: when theme is
+  // undefined (during server render / first hydration), treat it as
+  // 'system' so server + client markup stays consistent.
+  const themeLabel = theme ?? 'system';
+
   const cycleTheme = () => {
     const themes = ["light", "dark", "system"];
     const currentIndex = themes.indexOf(theme || "system");
@@ -93,7 +98,7 @@ export function Navigation() {
             <button
               onClick={cycleTheme}
               className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-              title={`Current theme: ${theme}`}
+              title={`Current theme: ${themeLabel}`}
             >
               <ThemeIcon className="h-5 w-5" />
             </button>
