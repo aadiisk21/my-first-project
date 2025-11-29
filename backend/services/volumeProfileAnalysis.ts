@@ -322,8 +322,6 @@ export class VolumeProfileAnalysis {
     // Start from POC and expand outward
     let upperIndex = priceLevels.findIndex(level => Math.abs(level.price - poc.price) < 0.0001);
     let lowerIndex = upperIndex;
-    let upperIndex = upperIndex;
-    let lowerIndex = lowerIndex;
 
     while (cumulativeVolume < targetVolume &&
            (upperIndex < priceLevels.length - 1 || lowerIndex > 0)) {
@@ -424,7 +422,7 @@ export class VolumeProfileAnalysis {
       buySellRatio,
       deltaNeutral,
       deltaExtreme,
-      deltaReversals
+      deltaReversal: deltaReversals
     };
   }
 
@@ -725,7 +723,7 @@ export class VolumeProfileAnalysis {
     // Anchor at different significant points
     const significantPoints = priceLevels
       .filter(level => level.totalVolume >
-        priceLevels.reduce((sum, l) => sum + l.totalVolume, 0) / priceLevels.length * 1.5)
+        priceLevels.reduce((sum, l) => sum + l.totalVolume, 0) / priceLevels.length * 1.5
       )
       .slice(0, 10);
 
@@ -1071,6 +1069,7 @@ export class VolumeProfileAnalysis {
     const resampled: MarketData[] = [];
     for (let i = 0; i < data.length; i += multiplier) {
       let ohlc = {
+        symbol: data[i].symbol,
         open: data[i].open,
         high: Math.max(...data.slice(i, i + multiplier).map(d => d.high)),
         low: Math.min(...data.slice(i, i + multiplier).map(d => d.low)),
@@ -1103,6 +1102,13 @@ export class VolumeProfileAnalysis {
     }
 
     return trueRangeSum / (data.length - period);
+  }
+
+  private calculateVWAPFromLevels(priceLevels: VolumeLevel[]): number {
+    const totalVol = priceLevels.reduce((sum, lvl) => sum + lvl.totalVolume, 0);
+    if (totalVol === 0) return 0;
+    const volPrice = priceLevels.reduce((sum, lvl) => sum + lvl.totalVolume * lvl.price, 0);
+    return volPrice / totalVol;
   }
 
   private createSupportResistance(level: VolumeLevel): SupportResistance {

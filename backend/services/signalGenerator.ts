@@ -190,7 +190,7 @@ export class SignalGenerator {
     const currentRSI = indicators.rsi[indicators.rsi.length - 1] || 50;
     const currentMACD = indicators.macd.macd[indicators.macd.macd.length - 1] || 0;
     const currentStoch = indicators.stochastic.k[indicators.stochastic.k.length - 1] || 50;
-    const currentVolume = indicators.volume[indicators.volume.length - 1] || 0;
+    const currentVolume = (indicators.volume && indicators.volume.length > 0) ? indicators.volume[indicators.volume.length - 1] : 0;
 
     let confidence = 50; // Base confidence
 
@@ -213,7 +213,7 @@ export class SignalGenerator {
     }
 
     // Volume contribution (higher volume increases confidence)
-    const avgVolume = indicators.volume.slice(-20).reduce((a, b) => a + b, 0) / 20;
+    const avgVolume = (indicators.volume && indicators.volume.length >= 20) ? indicators.volume.slice(-20).reduce((a: number, b: number) => a + b, 0) / 20 : 0;
     if (currentVolume > avgVolume * 1.2) {
       confidence += 10;
     }
@@ -483,6 +483,9 @@ export class SignalGenerator {
     // Mock implementation
     return {
       timeframe: options.timeframe,
+      pair: options.pair,
+      signalType: options.signalType,
+      minConfidence: options.minConfidence,
       totalSignals: 100,
       successfulSignals: 68,
       successRate: 0.68,

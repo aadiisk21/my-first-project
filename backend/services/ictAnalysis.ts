@@ -187,20 +187,21 @@ export class ICTAnalysis {
     // Volume analysis
     const volumeSpike = recentVolume > avgVolume * 2;
     const volumeDry = recentVolume < avgVolume * 0.5;
-    const absorbingVolume = recentVolume > avgVolume * 1.5 && isRanging;
+    const absorbingRatio = avgVolume > 0 ? recentVolume / avgVolume : 0;
+    const absorbingVolume = absorbingRatio > this.liquidityThreshold && isRanging;
 
     let phase: MarketPhase['phase'];
     let strength = 0;
 
     if (isRanging && absorbingVolume) {
       phase = 'ACCUMULATION';
-      strength = Math.min(100, (absorbingVolume / avgVolume - 1) * 100);
+      strength = Math.min(100, (absorbingRatio - 1) * 100);
     } else if (isTrendingUp && volumeSpike) {
       phase = 'MARK_UP';
       strength = Math.min(100, (priceChange / closes[0]) * 100);
     } else if (isRanging && absorbingVolume && highs[highs.length - 1] < highs[highs.length - 50]) {
       phase = 'DISTRIBUTION';
-      strength = Math.min(100, (absorbingVolume / avgVolume - 1) * 100);
+      strength = Math.min(100, (absorbingRatio - 1) * 100);
     } else if (isTrendingDown && volumeSpike) {
       phase = 'MARK_DOWN';
       strength = Math.min(100, Math.abs(priceChange / closes[0]) * 100);
@@ -357,7 +358,7 @@ export class ICTAnalysis {
         const isLiquidityZone = highVolume > highVolumeThreshold;
 
         if (isLiquidityZone) {
-          const type = nearbyCandles.some(d => d.close > d.open) ? 'BUY' : 'SELL';
+          const type: LiquidityZone['type'] = nearbyCandles.some(d => d.close > d.open) ? 'BUY' : 'SELL';
           const zone = {
             price: level,
             zone: {
@@ -670,7 +671,7 @@ export class ICTAnalysis {
     for (let i = 2; i < lows.length - 2; i++) {
       const currentLow = lows[i];
       const leftLow = Math.min(...lows.slice(Math.max(0, i - 5), i));
-      const rightLow = Math.min(...lows.slice(i + 1, Math.min(i + 6, lows.length))));
+      const rightLow = Math.min(...lows.slice(i + 1, Math.min(i + 6, lows.length)));
 
       if (currentLow < leftLow && currentLow < rightLow) {
         significantLows.push(currentLow);

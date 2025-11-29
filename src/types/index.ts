@@ -58,6 +58,7 @@ export interface TechnicalIndicators {
     k: number[];
     d: number[];
   };
+  volume?: number[];
 }
 
 export interface UserPortfolio {

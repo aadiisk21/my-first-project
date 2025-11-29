@@ -135,10 +135,10 @@ export class SMCAnalysis {
     const swingPoints = this.findSwingPoints(highs, lows);
 
     // Classify market structure
-    const higherHighs = this.findHigherHighs(swingPoints, highs);
-    const higherLows = this.findHigherLows(swingPoints, lows);
-    const lowerHighs = this.findLowerHighs(swingPoints, highs);
-    const lowerLows = this.findLowerLows(swingPoints, lows);
+    const higherHighs = this.findHigherHighs(swingPoints.highPoints, highs);
+    const higherLows = this.findHigherLows(swingPoints.lowPoints, lows);
+    const lowerHighs = this.findLowerHighs(swingPoints.highPoints, highs);
+    const lowerLows = this.findLowerLows(swingPoints.lowPoints, lows);
 
     // Determine trend
     const trend = this.determineTrend(higherHighs, higherLows, closes[closes.length - 1]);
@@ -406,6 +406,9 @@ export class SMCAnalysis {
     lowPoints: number[];
   } {
     // Simple fractal identification
+    const highPoints: number[] = [];
+    const lowPoints: number[] = [];
+
     for (let i = 2; i < highs.length - 2; i++) {
       const currentHigh = highs[i];
       const currentLow = lows[i];

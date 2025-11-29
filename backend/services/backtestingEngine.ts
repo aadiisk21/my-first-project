@@ -1,5 +1,5 @@
-import { MarketData, TradingSignal, TechnicalIndicators } from '../../src/types';
-import { SMCAnalysis } from './mcAnalysis';
+import { MarketData, TechnicalIndicators } from '../../src/types';
+import { SMCAnalysis } from './smcAnalysis';
 import { VolumeProfileAnalysis } from './volumeProfileAnalysis';
 import { MarketPsychologyAnalysis } from './marketPsychologyAnalysis';
 import { FibonacciAnalysis } from './fibonacciAnalysis';
@@ -36,6 +36,7 @@ interface BacktestConfig {
   volatilityWindow: number; // ATR window for volatility calculation
   riskFreeRate: number; // Risk-free rate for calculations
   inflationRate: number; // Annual inflation rate for calculations
+  marginRequirement?: number; // optional margin requirement (0.5 = 50%)
 }
 
 interface Trade {
@@ -48,10 +49,11 @@ interface Trade {
   confidence: number;
   stopLoss: number;
   takeProfit: number | null;
-  fees: {
+    fees: {
     commission: number;
     slippage: number;
     impact: number;
+    totalCost: number;
     liquidity: number;
     latency: number;
   };
@@ -69,6 +71,28 @@ interface Trade {
   isPush: boolean;
   reason?: string;
   marketConditions: string[];
+}
+
+// Internal signal type used by the backtester. The project's global TradingSignal
+// shape (src/types) is different and intentionally not used here to avoid mismatches
+// — we map service outputs into this internal shape.
+interface BacktestSignal {
+  id?: string;
+  type: 'BUY' | 'SELL' | 'HOLD';
+  confidence: number; // 0..1
+  stopLoss?: number;
+  takeProfit?: number | number[];
+  strength?: number; // 0..1
+  riskRewardRatio?: number; // expected R:R
+  winRate?: number; // 0..1
+  averageWin?: number;
+  averageLoss?: number;
+  source?: string; // which analysis produced it
+  entryPrice?: number;
+  pair?: string;
+  timeframe?: string;
+  // extra flexible bag for additional data
+  meta?: Record<string, any>;
 }
 
 interface BacktestStrategy {
@@ -263,7 +287,7 @@ export class BacktestingEngine {
     marketPrice: number,
     volumeProfile: any,
     orderBookDepth: number = 10
-  ): { totalCost: number; slippage: number; impact: number; liquidity: number; latency: number } {
+  ): { totalCost: number; commission: number; slippage: number; impact: number; liquidity: number; latency: number } {
     const config = this.config.slippageModel;
 
     // Volume-based slippage (institutional model)
@@ -274,7 +298,8 @@ export class BacktestingEngine {
     const baseSlippage = config.slippage * Math.sqrt(volumeRatio) * 0.01;
 
     // Price impact calculation
-    const priceImpact = config.priceImpactSlippage * Math.pow(tradeSize / 100000, 0.5) * 0.0001;
+    // priceImpactSlippage sits on top-level backtest config
+    const priceImpact = (this.config.priceImpactSlippage || 0) * Math.pow(tradeSize / 100000, 0.5) * 0.0001;
 
     // Liquidity cost simulation
     const liquidityCost = config.liquidityCost * (1 + volumeRatio * 2) * 0.001;
@@ -290,6 +315,7 @@ export class BacktestingEngine {
 
     return {
       totalCost: baseSlippage + priceImpact + liquidityCost + latencyCost + commission,
+      commission,
       slippage: baseSlippage,
       impact: priceImpact,
       liquidity: liquidityCost,
@@ -414,58 +440,119 @@ export class BacktestingEngine {
     currentBar: MarketData,
     previousBars: MarketData[],
     strategy: BacktestStrategy
-  ): Promise<TradingSignal[]> {
-    const signals: TradingSignal[] = [];
+  ): Promise<BacktestSignal[]> {
+    const signals: BacktestSignal[] = [];
 
     try {
-      // SMC Analysis
-      const smcResult = await this.smcAnalysis.analyzeMarketData(previousBars);
-      if (smcResult.signals) {
-        signals.push(...smcResult.signals.map(s => ({
-          ...s,
-          source: 'SMC',
-          confidence: s.confidence * 0.9
-        })));
+      // SMC Analysis - analyze & convert to an internal BacktestSignal
+      try {
+        const smcLevels = this.smcAnalysis.analyzeMarketData(previousBars, this.config.timeframe);
+        const smcSignal = this.smcAnalysis.generateSMCSignals(smcLevels, currentBar.close, this.config.timeframe);
+        if (smcSignal && smcSignal.signal && smcSignal.signal !== 'HOLD') {
+          signals.push({
+            type: smcSignal.signal,
+            confidence: Math.min(1, (smcSignal.confidence || 0) / 100),
+            stopLoss: smcSignal.stopLoss,
+            takeProfit: smcSignal.takeProfit,
+            strength: (smcSignal.confidence || 0) / 100,
+            source: 'SMC',
+            entryPrice: smcSignal.entryPrice,
+            timeframe: this.config.timeframe,
+            meta: { rationale: smcSignal.rationale, liquidityZones: smcSignal.liquidityZones }
+          });
+        }
+      } catch (_e) {
+        // analysis failed or insufficient data — ignore
       }
 
-      // ICT Analysis
-      const ictResult = await this.ictAnalysis.identifyMarketStructure(previousBars);
-      if (ictResult.signals) {
-        signals.push(...ictResult.signals.map(s => ({
-          ...s,
-          source: 'ICT',
-          confidence: s.confidence * 0.85
-        })));
+      // ICT Analysis - use analyzeICT and convert informative pieces into signals
+      try {
+        const ictResult = this.ictAnalysis.analyzeICT(previousBars, this.config.timeframe);
+        // produce signals from order blocks and POIs
+        if (ictResult.smartMoneyTools?.orderBlocks?.length) {
+          for (const ob of ictResult.smartMoneyTools.orderBlocks) {
+            const type = ob.type === 'BULLISH' ? 'BUY' : ob.type === 'BEARISH' ? 'SELL' : 'HOLD';
+            if (type !== 'HOLD') {
+              signals.push({
+                type,
+                confidence: Math.min(1, (ob.strength || 0) / 100),
+                stopLoss: ob.candle?.low ?? undefined,
+                takeProfit: ob.candle?.high ?? undefined,
+                strength: (ob.strength || 0) / 100,
+                source: 'ICT',
+                entryPrice: ob.price,
+                timeframe: this.config.timeframe,
+                meta: { validity: ob.validity }
+              });
+            }
+          }
+        }
+      } catch (_e) {
+        // ignore
       }
 
-      // Volume Profile Analysis
-      const volumeResult = await this.volumeProfileAnalysis.analyzeVolumeProfile(previousBars);
-      if (volumeResult.signals) {
-        signals.push(...volumeResult.signals.map(s => ({
-          ...s,
-          source: 'Volume',
-          confidence: s.confidence * 0.8
-        })));
+      // Volume Profile Analysis - map structure into signals
+      try {
+        const volumeResult = this.volumeProfileAnalysis.analyzeVolumeProfile(previousBars, [this.config.timeframe]);
+        const price = currentBar.close;
+        // If structure indicates imbalance, generate basic signals
+        if (volumeResult.marketStructure?.structure === 'IMBALANCED_BUY') {
+          signals.push({ type: 'BUY', confidence: 0.65, source: 'Volume', entryPrice: price });
+        } else if (volumeResult.marketStructure?.structure === 'IMBALANCED_SELL') {
+          signals.push({ type: 'SELL', confidence: 0.65, source: 'Volume', entryPrice: price });
+        } else {
+          // value-area based signals (POC/value area)
+          const va = volumeResult.valueArea;
+          if (va && Math.abs(price - va.low) / (va.range || 1) < 0.02) {
+            signals.push({ type: 'BUY', confidence: 0.5, source: 'Volume', entryPrice: price });
+          } else if (va && Math.abs(price - va.high) / (va.range || 1) < 0.02) {
+            signals.push({ type: 'SELL', confidence: 0.5, source: 'Volume', entryPrice: price });
+          }
+        }
+      } catch (_e) {
+        // ignore
       }
 
-      // Market Psychology Analysis
-      const psychologyResult = await this.psychologyAnalysis.calculateFearGreedIndex(previousBars);
-      if (psychologyResult.signals) {
-        signals.push(...psychologyResult.signals.map(s => ({
-          ...s,
-          source: 'Psychology',
-          confidence: s.confidence * 0.7
-        })));
+      // Market Psychology Analysis - call public analysis and wire contrarian signals
+      try {
+        const psych = this.psychologyAnalysis.analyzeMarketPsychology(previousBars);
+        if (psych.contrarianSignals && psych.contrarianSignals.length) {
+          for (const cs of psych.contrarianSignals) {
+            const type = cs.signalType === 'CONTRARIAN_BUY' ? 'BUY' : cs.signalType === 'CONTRARIAN_SELL' ? 'SELL' : 'HOLD';
+            if (type !== 'HOLD') {
+              signals.push({
+                type,
+                confidence: Math.min(1, (cs.probability || 50) / 100),
+                strength: (cs.strength || 50) / 100,
+                source: 'Psychology',
+                timeframe: cs.timeframe,
+                entryPrice: cs.entryPrice,
+                takeProfit: cs.targets
+              });
+            }
+          }
+        }
+      } catch (_e) {
+        // ignore
       }
 
-      // Fibonacci Analysis
-      const fibResult = await this.fibonacciAnalysis.calculateFibonacciLevels(previousBars);
-      if (fibResult.signals) {
-        signals.push(...fibResult.signals.map(s => ({
-          ...s,
-          source: 'Fibonacci',
-          confidence: s.confidence * 0.75
-        })));
+      // Fibonacci Analysis - use public analyzeFibonacci
+      try {
+        const fibResult = this.fibonacciAnalysis.analyzeFibonacci(previousBars, this.config.timeframe);
+        const nearThreshold = 0.01 * currentBar.close; // 1% distance
+        for (const lvl of fibResult.levels.slice(0, 10)) {
+          if (Math.abs(currentBar.close - lvl.price) <= nearThreshold) {
+            signals.push({
+              type: currentBar.close > lvl.price ? 'SELL' : 'BUY',
+              confidence: Math.min(1, (lvl.strength || 50) / 100),
+              source: 'Fibonacci',
+              entryPrice: lvl.price,
+              strength: (lvl.strength || 50) / 100
+            });
+          }
+        }
+      } catch (_e) {
+        // ignore
       }
 
       // Filter signals based on strategy parameters
@@ -477,22 +564,22 @@ export class BacktestingEngine {
     }
   }
 
-  private filterSignalsByStrategy(signals: TradingSignal[], strategy: BacktestStrategy): TradingSignal[] {
-    return signals.filter(signal => {
+  private filterSignalsByStrategy(signals: BacktestSignal[], strategy: BacktestStrategy): BacktestSignal[] {
+    return signals.filter((signal: BacktestSignal) => {
       // Apply strategy-specific filters
       if (signal.confidence < (strategy.parameters.minConfidence || 0.7)) return false;
-      if (signal.strength < (strategy.parameters.minStrength || 0.6)) return false;
+      if ((signal.strength ?? 0) < (strategy.parameters.minStrength || 0.6)) return false;
 
       // Risk management filters
       const riskSettings = strategy.rules.riskManagement;
-      if (signal.riskRewardRatio < (riskSettings.minRiskRewardRatio || 1.0)) return false;
+      if ((signal.riskRewardRatio ?? 0) < (riskSettings.minRiskRewardRatio || 1.0)) return false;
 
       return true;
     });
   }
 
   private async processEntries(
-    signals: TradingSignal[],
+    signals: BacktestSignal[],
     currentBar: MarketData,
     currentCapital: number,
     barIndex: number
@@ -514,8 +601,8 @@ export class BacktestingEngine {
             quantity: positionSize,
             type: signal.type,
             confidence: signal.confidence,
-            stopLoss: signal.stopLoss || currentBar.close * 0.98,
-            takeProfit: signal.takeProfit || currentBar.close * 1.02,
+            stopLoss: signal.stopLoss ?? currentBar.close * 0.98,
+            takeProfit: Array.isArray(signal.takeProfit) ? signal.takeProfit[0] : (signal.takeProfit ?? currentBar.close * 1.02),
             fees: fees,
             commissionPercent: this.config.slippageModel.commissionPercent,
             slippageCost: fees.totalCost,
@@ -540,7 +627,7 @@ export class BacktestingEngine {
     return newTrades;
   }
 
-  private calculatePositionSize(currentCapital: number, signal: TradingSignal, price: number): number {
+  private calculatePositionSize(currentCapital: number, signal: BacktestSignal, price: number): number {
     const riskAmount = currentCapital * this.config.riskPerTrade;
     const stopLossDistance = Math.abs(price - (signal.stopLoss || price * 0.98));
     const riskPerShare = stopLossDistance;
@@ -611,7 +698,7 @@ export class BacktestingEngine {
   private async processExits(
     openTrades: Trade[],
     currentBar: MarketData,
-    signals: TradingSignal[],
+    signals: BacktestSignal[],
     barIndex: number
   ): Promise<void> {
     for (let i = openTrades.length - 1; i >= 0; i--) {

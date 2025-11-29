@@ -12,11 +12,12 @@ interface FearGreedIndex {
     social: number;
     news: number;
     trends: number;
+    uncertainty?: number;
   };
 }
 
 interface CrowdBehavior {
-  herdBehavior: 'PANIC_SELLING' | 'FOMO_BUYING' | 'RATIONAL_TRADING' | 'INDECISION' | 'COMPLACENCY';
+  herdBehavior: 'PANIC_SELLING' | 'FOMO_BUYING' | 'RATIONAL_TRADING' | 'INDECISION' | 'COMPLACENCY' | 'MANIPULATION';
   conviction: number;
   volumeProfile: VolumeProfile;
   priceAction: 'CAPITULATION' | 'DISTRIBUTION' | 'ACCUMULATION' | 'MANIPULATION';
@@ -24,10 +25,16 @@ interface CrowdBehavior {
 }
 
 interface VolumeProfile {
-  distribution: 'NORMAL' | 'SKEWED' | 'FRONT_RUN' | 'EXHAUSTION' | 'ACCUMULATION';
+  distribution: 'NORMAL' | 'SKEWED' | 'FRONT_RUN' | 'EXHAUSTION' | 'ACCUMULATION' | 'SPIKING' | 'DRYING' | 'DISTRIBUTION';
   buyPressure: number;
   sellPressure: number;
-  volumeTrend: 'INCREASING' | 'DECREASING' | 'SPIKING' | 'DRYING';
+  volumeTrend: {
+    increasingRatio: number;
+    decreasingRatio: number;
+    frontRunScore: number;
+    exhaustionScore: number;
+    skewedScore: number;
+  };
   efficiency: number;
 }
 
@@ -40,12 +47,13 @@ interface MarketSentiment {
     euphoria: number;
     panic: number;
   };
-  sources: {
+    sources: {
     price: number;
     volume: number;
     volatility: number;
     momentum: number;
-    optionsFlow: number;
+      optionsFlow: { putCallRatio: number; callRatio: number };
+      social: number;
   };
   socialSignals: SocialSignal[];
 }
@@ -60,7 +68,7 @@ interface SocialSignal {
 }
 
 interface ContrarianIndicator {
-  signal: 'CONTRARIAN_BUY' | 'CONTRARIAN_SELL' | 'FOLLOW_TREND' | 'NEUTRAL';
+  signalType: 'CONTRARIAN_BUY' | 'CONTRARIAN_SELL' | 'FOLLOW_TREND' | 'NEUTRAL';
   strength: number;
   probability: number;
   timeframe: string;
@@ -109,13 +117,14 @@ export class MarketPsychologyAnalysis {
     }
 
     // 1. Calculate Fear & Greed Index
-    const fearGreedIndex = this.calculateFearGreedIndex(marketData);
+    const fearGreedIndex = this.calculateFearGreedIndex(marketData, externalFactors);
 
     // 2. Analyze crowd behavior patterns
     const crowdBehavior = this.analyzeCrowdBehavior(marketData, fearGreedIndex);
 
     // 3. Calculate market sentiment
-    const marketSentiment = this.calculateMarketSentiment(marketData, socialSentiment, fearGreedIndex);
+    // calculateMarketSentiment expects (data, fgi, socialSentiment)
+    const marketSentiment = this.calculateMarketSentiment(marketData, fearGreedIndex, socialSentiment);
 
     // 4. Generate contrarian signals
     const contrarianSignals = this.generateContrarianSignals(marketData, crowdBehavior, marketSentiment);
@@ -136,7 +145,7 @@ export class MarketPsychologyAnalysis {
    * Calculates the Fear & Greed Index
    * Based on multiple market indicators and social sentiment
    */
-  private calculateFearGreedIndex(data: MarketData[]): FearGreedIndex {
+  private calculateFearGreedIndex(data: MarketData[], externalFactors?: ExternalFactors): FearGreedIndex {
     const recentData = data.slice(-30); // Last 30 periods
     const currentPrice = recentData[recentData.length - 1].close;
     const previousPrice = recentData[0].close;
@@ -245,8 +254,8 @@ export class MarketPsychologyAnalysis {
    */
   private calculateMarketSentiment(
     data: MarketData[],
-    socialSentiment?: SocialSignal[],
-    fgi: FearGreedIndex
+    fgi: FearGreedIndex,
+    socialSentiment?: SocialSignal[]
   ): MarketSentiment {
     const recentData = data.slice(-30);
     const closes = recentData.map(d => d.close);
@@ -774,9 +783,29 @@ export class MarketPsychologyAnalysis {
     for (let i = 10; i < data.length - 10; i += 5) {
       const entryPrice = data[i].close;
       const exitPrice = data[i + 5].close;
-      const isWin = crowdBehavior.herdBehavior === 'CONTRARIAN_BUY' ? exitPrice > entryPrice :
-                   crowdBehavior.herdBehavior === 'CONTRARIAN_SELL' ? exitPrice < entryPrice :
-                   Math.random() > 0.5;
+      let isWin: boolean;
+
+      // Derive likely win/loss based on observed herd behavior
+      switch (crowdBehavior.herdBehavior) {
+        case 'FOMO_BUYING':
+          // Herd buys strongly - contrarian sell trades may win if price later drops
+          isWin = exitPrice < entryPrice;
+          break;
+        case 'PANIC_SELLING':
+          // Herd panic-sells - contrarian buy trades may win if price rebounds
+          isWin = exitPrice > entryPrice;
+          break;
+        case 'RATIONAL_TRADING':
+        case 'COMPLACENCY':
+          // Trend and rational markets generally favor direction-based trades
+          isWin = exitPrice > entryPrice;
+          break;
+        case 'INDECISION':
+        case 'MANIPULATION':
+        default:
+          // Unpredictable environments - assume random outcome
+          isWin = Math.random() > 0.5;
+      }
 
       if (isWin) winCount++;
       totalTrades++;
@@ -791,11 +820,11 @@ export class MarketPsychologyAnalysis {
       data.map(d => d.low)
     );
 
-    // Lower risk for rational trading, higher for emotional
+    // Lower risk for rational trading, higher for impulsive or manipulated behavior
     const riskAdjustment = crowdBehavior.herdBehavior === 'RATIONAL_TRADING' ? -10 :
-                          crowdBehavior.herdBehavior === 'EMOTIONAL_TRADING' ? 10 :
-                          crowdBehavior.herdBehavior === 'TREND_FOLLOWING' ? 0 :
-                          crowdBehavior.herdBehavior === 'COMPLACENCY' ? 5 : 0;
+                (crowdBehavior.herdBehavior === 'FOMO_BUYING' || crowdBehavior.herdBehavior === 'PANIC_SELLING') ? 10 :
+                crowdBehavior.herdBehavior === 'MANIPULATION' ? 15 :
+                crowdBehavior.herdBehavior === 'COMPLACENCY' ? 5 : 0;
 
     // Adjust for volatility
     const volatilityAdjustment = volatility > 0.05 ? -5 : volatility < 0.02 ? 5 : 0;
@@ -804,7 +833,7 @@ export class MarketPsychologyAnalysis {
   }
 
   private getTimeframeData(data: MarketData[], timeframe: string): MarketData[] {
-    const intervals = {
+    const intervals: Record<string, number> = {
       '1h': 1,
       '4h': 4,
       '1d': 24
@@ -816,11 +845,10 @@ export class MarketPsychologyAnalysis {
 
   private calculateATR(data: MarketData[]): number {
     let totalRange = 0;
-    let trueRange = 0;
 
     for (let i = 1; i < data.length; i++) {
-      const trueRange = Math.max(data[i].high - data[i].low, Math.abs(data[i].high - data[i - 1].close));
-      totalRange += trueRange;
+      const tr = Math.max(data[i].high - data[i].low, Math.abs(data[i].high - data[i - 1].close));
+      totalRange += tr;
     }
 
     return totalRange / data.length;

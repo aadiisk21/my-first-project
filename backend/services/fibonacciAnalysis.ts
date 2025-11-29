@@ -29,17 +29,19 @@ interface FibonacciGrid {
   timeframe: string;
   strength: number;
   trend: 'BULLISH' | 'BEARISH' | 'RANGING';
-  currentWave: FibonacciWave;
-  nextWave: FibonacciWave;
+  currentWave?: FibonacciWave;
+  nextWave?: FibonacciWave;
 }
 
 interface FibonacciGridLevel {
   price: number;
   level: number; // 0.236, 0.382, 0.5, 0.618, 0.786, 1.0, 1.272, 1.618
-  type: 'RETRACEMENT' | 'EXTENSION';
+  type: 'RETRACEMENT' | 'EXTENSION' | 'EXPANSION' | 'PROJECTION' | 'TIME_ZONE';
   strength: number;
   isActive: boolean;
   confluence: number;
+  reliability?: number;
+  touches?: FibonacciTouch[];
 }
 
 interface FibonacciWave {
@@ -63,6 +65,9 @@ interface FibonacciConfluence {
   timeframes: string[];
   strength: number;
   reliability: number;
+  range?: number;
+  projectedTargets?: number[];
+  stopLoss?: number;
 }
 
 interface FibonacciCluster {
@@ -272,7 +277,7 @@ export class FibonacciAnalysis {
         levelType: 'RETRACEMENT',
         ratio,
         strength: this.calculateLevelStrength(ratio, moveSize),
-        confluence: 0, // Will be calculated later
+        confluence: 0,
         timeframe: '1h',
         startPrice,
         endPrice,
@@ -458,7 +463,7 @@ export class FibonacciAnalysis {
     });
 
     // Convert map to array
-    levelMap.forEach((_, price) => {
+    levelMap.forEach((priceLevels) => {
       priceLevels.forEach(level => grid.push(level));
     });
 
@@ -473,6 +478,20 @@ export class FibonacciAnalysis {
       strength: gridStrength,
       trend
     };
+  }
+
+  private calculateGridStrength(levels: FibonacciGridLevel[]): number {
+    if (!levels || levels.length === 0) return 0;
+    const total = levels.reduce((s, l) => s + (l.strength || 0), 0);
+    return total / levels.length;
+  }
+
+  private calculateGridTrend(levels: FibonacciGridLevel[], currentPrice: number): 'BULLISH' | 'BEARISH' | 'RANGING' {
+    if (!levels || levels.length === 0) return 'RANGING';
+    const avgPrice = levels.reduce((s, l) => s + l.price, 0) / levels.length;
+    if (currentPrice > avgPrice * 1.01) return 'BULLISH';
+    if (currentPrice < avgPrice * 0.99) return 'BEARISH';
+    return 'RANGING';
   }
 
   /**
@@ -595,7 +614,7 @@ export class FibonacciAnalysis {
       // Check if this can be a cluster center
       const nearbyLevels = nearbyPoints.map(p => levels[p.index]);
       const clusterCenter = price;
-      const clusterRadius = Math.max(...nearbyLevels.map(l => Math.abs(l.price - l)));
+      const clusterRadius = Math.max(...nearbyLevels.map(l => Math.abs(l.price - clusterCenter)));
 
       // Calculate cluster properties
       const density = nearbyLevels.length;
@@ -685,8 +704,9 @@ export class FibonacciAnalysis {
     let validTouches = 0;
 
     levels.forEach(level => {
-      totalTouches += level.touches.length;
-      validTouches += level.touches.filter(t => this.isValidTouch(level, data, t.price)).length;
+      const touches = level.touches || [];
+      totalTouches += touches.length;
+      validTouches += touches.filter(t => this.isValidTouch(level, data, t.price)).length;
     });
 
     return totalTouches > 0 ? (validTouches / totalTouches) * 100 : 50;
@@ -694,14 +714,14 @@ export class FibonacciAnalysis {
 
   private calculateConfluenceScore(levels: FibonacciLevel[]): number {
     let score = 0;
-    const typeWeight = {
+    const typeWeight: Record<string, number> = {
       'RETRACEMENT': 30,
       'EXTENSION': 25,
       'PROJECTION': 15,
       'TIME_ZONE': 20
     };
 
-    const ratioWeight = {
+    const ratioWeight: Record<string, number> = {
       0.236: 90,
       0.382: 85,
       0.5: 75,
@@ -714,7 +734,8 @@ export class FibonacciAnalysis {
 
     levels.forEach(level => {
       const typeBonus = typeWeight[level.levelType] || 0;
-      const ratioBonus = ratioWeight[Math.round(level.ratio * 1000) / 1000] || 0;
+      const ratioKey = String(Math.round(level.ratio * 1000) / 1000);
+      const ratioBonus = ratioWeight[ratioKey] || 0;
       score += level.strength + typeBonus + ratioBonus;
     });
 
@@ -778,9 +799,9 @@ export class FibonacciAnalysis {
       prices[3] > prices[4], prices[4] < prices[3]
     ];
 
-    // Simplified validation
-    for (let i = 0; i < 5; i++) {
-      if (expectedPattern[i] !== prices[i]) {
+    // Simplified validation: every expectedPattern entry must be true
+    for (let i = 0; i < expectedPattern.length; i++) {
+      if (!expectedPattern[i]) {
         isValidSequence = false;
         break;
       }
@@ -893,15 +914,15 @@ export class FibonacciAnalysis {
     return hasReaction;
   }
 
-  private calculateClusterConfluence(levels: FibonacciGridLevel[]): number {
-    const typeCount = new Set(levels.map(l => l.type)).size;
+  private calculateClusterConfluence(levels: FibonacciLevel[]): number {
+    const typeCount = new Set(levels.map(l => l.levelType)).size;
     const avgStrength = levels.reduce((sum, l) => sum + l.strength, 0) / levels.length;
     const levelSpread = this.calculateLevelSpread(levels);
 
     return Math.min(100, (typeCount * 25 + avgStrength * 0.3 + (100 - levelSpread) * 0.2));
   }
 
-  private calculateLevelSpread(levels: FibonacciGridLevel[]): number {
+  private calculateLevelSpread(levels: FibonacciLevel[]): number {
     if (levels.length < 2) return 0;
 
     const prices = levels.map(l => l.price);
@@ -910,7 +931,6 @@ export class FibonacciAnalysis {
 
     return ((high - low) / low) * 100;
   }
-}
 }
 
 interface FibonacciSwing {
