@@ -26,7 +26,12 @@ export async function POST(req: NextRequest) {
     };
 
     // Remove from cache
-    await cacheService.deleteUserSession(decoded.userId);
+    try {
+      await cacheService.deleteUserSession(decoded.userId);
+    } catch (cacheError) {
+      // Cache delete failed, that's okay
+      console.warn('Failed to delete user session from cache:', cacheError);
+    }
 
     return NextResponse.json({
       success: true,

@@ -279,7 +279,22 @@ export class CacheService {
   }
 }
 
-export const cacheService = new CacheService();
+let cacheServiceInstance: CacheService | null = null;
+
+export function getCacheService(): CacheService {
+  if (!cacheServiceInstance) {
+    cacheServiceInstance = new CacheService();
+  }
+  return cacheServiceInstance;
+}
+
+// For backward compatibility, export as a lazy getter
+export const cacheService = new Proxy<CacheService>({} as CacheService, {
+  get: (target, prop) => {
+    const service = getCacheService();
+    return (service as any)[prop];
+  },
+});
 
 export async function closeRedis(): Promise<void> {
   if (redisClient && redisClient.isOpen) {

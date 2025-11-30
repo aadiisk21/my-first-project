@@ -87,7 +87,12 @@ export async function POST(req: NextRequest) {
       token,
     };
 
-    await cacheService.setUserSession(user.id, sessionData);
+    try {
+      await cacheService.setUserSession(user.id, sessionData);
+    } catch (cacheError) {
+      // Cache write failed, but that's not critical for login
+      console.warn('Failed to cache user session:', cacheError);
+    }
 
     return NextResponse.json({
       success: true,

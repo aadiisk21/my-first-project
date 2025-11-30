@@ -80,22 +80,27 @@ export async function PUT(req: NextRequest) {
     );
 
     // Update cached session
-    const cachedUser = (await cacheService.getUserSession(
-      decoded.userId
-    )) as CachedUserSession | null;
+    try {
+      const cachedUser = (await cacheService.getUserSession(
+        decoded.userId
+      )) as CachedUserSession | null;
 
-    if (cachedUser) {
-      const typedCachedUser = cachedUser as CachedUserSession;
-      typedCachedUser.preferences = {
-        theme,
-        timezone,
-        currency,
-        language,
-        defaultTimeframe,
-        chartSettings,
-        alertSettings,
-      };
-      await cacheService.setUserSession(decoded.userId, typedCachedUser);
+      if (cachedUser) {
+        const typedCachedUser = cachedUser as CachedUserSession;
+        typedCachedUser.preferences = {
+          theme,
+          timezone,
+          currency,
+          language,
+          defaultTimeframe,
+          chartSettings,
+          alertSettings,
+        };
+        await cacheService.setUserSession(decoded.userId, typedCachedUser);
+      }
+    } catch (cacheError) {
+      // Cache update failed, that's okay
+      console.warn('Failed to update user cache:', cacheError);
     }
 
     return NextResponse.json({

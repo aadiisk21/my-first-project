@@ -35,7 +35,13 @@ export async function GET(req: NextRequest) {
     };
 
     // Get user from cache or database
-    let cachedUser = await cacheService.getUserSession(decoded.userId);
+    let cachedUser: unknown | null = null;
+    try {
+      cachedUser = await cacheService.getUserSession(decoded.userId);
+    } catch (cacheError) {
+      // Redis might not be available, that's okay - we'll fetch from DB
+      console.warn('Cache unavailable, fetching from database');
+    }
 
     if (!cachedUser) {
       const result = await executeQuery<User>(
