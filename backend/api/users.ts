@@ -2,7 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { CustomError } from '../middleware/errorHandler';
-import { executeQuery, executeTransaction } from '../database/connection';
+import { executeQuery } from '../database/connection';
 import { cacheService } from '../database/redis';
 
 const router = express.Router();
@@ -177,7 +177,12 @@ router.post('/logout', async (req, res) => {
     }
 
     // Verify and decode token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+      userId: string;
+      username: string;
+      iat: number;
+      exp: number;
+    };
 
     // Remove from cache
     await cacheService.deleteUserSession(decoded.userId);
@@ -207,7 +212,12 @@ router.get('/profile', async (req, res) => {
     }
 
     // Verify and decode token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+      userId: string;
+      username: string;
+      iat: number;
+      exp: number;
+    };
 
     // Get user from cache or database
     let cachedUser = await cacheService.getUserSession(decoded.userId);
@@ -268,7 +278,12 @@ router.put('/preferences', async (req, res) => {
       throw new CustomError('No token provided', 401);
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+      userId: string;
+      username: string;
+      iat: number;
+      exp: number;
+    };
 
     await executeQuery(
       `INSERT INTO user_preferences (user_id, theme, timezone, currency, language, default_timeframe, chart_settings, alert_settings, created_at, updated_at)
