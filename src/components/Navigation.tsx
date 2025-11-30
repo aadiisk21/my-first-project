@@ -30,7 +30,8 @@ export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const getThemeIcon = () => {
-    switch (theme) {
+    const resolved = theme ?? "system";
+    switch (resolved) {
       case "light":
         return SunIcon;
       case "dark":
@@ -44,7 +45,7 @@ export function Navigation() {
 
   const cycleTheme = () => {
     const themes = ["light", "dark", "system"];
-    const currentIndex = themes.indexOf(theme || "system");
+    const currentIndex = themes.indexOf(theme ?? "system");
     const nextIndex = (currentIndex + 1) % themes.length;
     setTheme(themes[nextIndex] as "light" | "dark" | "system");
   };
@@ -93,7 +94,7 @@ export function Navigation() {
             <button
               onClick={cycleTheme}
               className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-              title={`Current theme: ${theme}`}
+              title={`Current theme: ${theme ?? "system"}`}
             >
               <ThemeIcon className="h-5 w-5" />
             </button>

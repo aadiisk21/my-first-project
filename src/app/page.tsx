@@ -18,14 +18,13 @@ export default function Dashboard() {
   const [selectedPair, setSelectedPair] = useState("BTC/USDT");
   const [isLoading, setIsLoading] = useState(true);
 
-  const {
-    selectedPair: storeSelectedPair,
-    pairs,
-    activeSignals,
-    isLoading: storeIsLoading,
-    setSelectedPair: setStoreSelectedPair,
-    setSelectedTimeframe: setStoreSelectedTimeframe,
-  } = useTradingStore();
+  // Select only the pieces of state we need to avoid subscribing to the whole store
+  const storeSelectedPair = useTradingStore((s) => s.selectedPair);
+  const pairs = useTradingStore((s) => s.pairs);
+  const activeSignals = useTradingStore((s) => s.activeSignals);
+  const storeIsLoading = useTradingStore((s) => s.isLoading);
+  const setStoreSelectedPair = useTradingStore((s) => s.setSelectedPair);
+  const setStoreSelectedTimeframe = useTradingStore((s) => s.setSelectedTimeframe);
 
   // Initialize dashboard data
   useEffect(() => {
