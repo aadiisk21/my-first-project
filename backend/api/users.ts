@@ -44,7 +44,10 @@ router.post('/register', async (req, res) => {
     );
 
     if (existingUser.length > 0) {
-      throw new CustomError('User with this email or username already exists', 409);
+      throw new CustomError(
+        'User with this email or username already exists',
+        409
+      );
     }
 
     // Hash password
@@ -73,7 +76,7 @@ router.post('/register', async (req, res) => {
       userId: user.id,
       username: user.username,
       email: user.email,
-      token
+      token,
     });
 
     res.status(201).json({
@@ -85,16 +88,16 @@ router.post('/register', async (req, res) => {
           email: user.email,
           firstName: user.first_name,
           lastName: user.last_name,
-          createdAt: user.created_at
+          createdAt: user.created_at,
         },
-        token
-      }
+        token,
+      },
     });
   } catch (error) {
     const statusCode = error instanceof CustomError ? error.statusCode : 500;
     res.status(statusCode).json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to register user'
+      error: error instanceof Error ? error.message : 'Failed to register user',
     });
   }
 });
@@ -138,7 +141,7 @@ router.post('/login', async (req, res) => {
       userId: user.id,
       username: user.username,
       email: user.email,
-      token
+      token,
     });
 
     res.json({
@@ -150,16 +153,16 @@ router.post('/login', async (req, res) => {
           email: user.email,
           firstName: user.first_name,
           lastName: user.last_name,
-          createdAt: user.created_at
+          createdAt: user.created_at,
         },
-        token
-      }
+        token,
+      },
     });
   } catch (error) {
     const statusCode = error instanceof CustomError ? error.statusCode : 500;
     res.status(statusCode).json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to login'
+      error: error instanceof Error ? error.message : 'Failed to login',
     });
   }
 });
@@ -182,14 +185,14 @@ router.post('/logout', async (req, res) => {
     res.json({
       success: true,
       data: {
-        message: 'Logged out successfully'
-      }
+        message: 'Logged out successfully',
+      },
     });
   } catch (error) {
     const statusCode = error instanceof CustomError ? error.statusCode : 500;
     res.status(statusCode).json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to logout'
+      error: error instanceof Error ? error.message : 'Failed to logout',
     });
   }
 });
@@ -227,21 +230,22 @@ router.get('/profile', async (req, res) => {
         firstName: user.first_name,
         lastName: user.last_name,
         createdAt: user.created_at,
-        updatedAt: user.updated_at
+        updatedAt: user.updated_at,
       };
     }
 
     res.json({
       success: true,
       data: {
-        user: cachedUser
-      }
+        user: cachedUser,
+      },
     });
   } catch (error) {
     const statusCode = error instanceof CustomError ? error.statusCode : 500;
     res.status(statusCode).json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get user profile'
+      error:
+        error instanceof Error ? error.message : 'Failed to get user profile',
     });
   }
 });
@@ -250,7 +254,15 @@ router.get('/profile', async (req, res) => {
 router.put('/preferences', async (req, res) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
-    const { theme, timezone, currency, language, defaultTimeframe, chartSettings, alertSettings } = req.body;
+    const {
+      theme,
+      timezone,
+      currency,
+      language,
+      defaultTimeframe,
+      chartSettings,
+      alertSettings,
+    } = req.body;
 
     if (!token) {
       throw new CustomError('No token provided', 401);
@@ -279,7 +291,7 @@ router.put('/preferences', async (req, res) => {
         language,
         defaultTimeframe,
         JSON.stringify(chartSettings),
-        JSON.stringify(alertSettings)
+        JSON.stringify(alertSettings),
       ]
     );
 
@@ -294,7 +306,7 @@ router.put('/preferences', async (req, res) => {
         language,
         defaultTimeframe,
         chartSettings,
-        alertSettings
+        alertSettings,
       };
       await cacheService.setUserSession(decoded.userId, typedCachedUser);
     }
@@ -302,14 +314,15 @@ router.put('/preferences', async (req, res) => {
     res.json({
       success: true,
       data: {
-        message: 'Preferences updated successfully'
-      }
+        message: 'Preferences updated successfully',
+      },
     });
   } catch (error) {
     const statusCode = error instanceof CustomError ? error.statusCode : 500;
     res.status(statusCode).json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to update preferences'
+      error:
+        error instanceof Error ? error.message : 'Failed to update preferences',
     });
   }
 });
