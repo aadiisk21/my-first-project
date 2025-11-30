@@ -1,5 +1,5 @@
 import { TradingSignal, MarketData, TechnicalIndicators } from '../../src/types';
-import { TradingViewService } from './tradingViewService';
+import { BinanceService } from './binanceService';
 
 interface SignalGenerationOptions {
   symbols: string[];
@@ -23,10 +23,10 @@ interface SignalStats {
 }
 
 export class SignalGenerator {
-  private tradingViewService: TradingViewService;
+  private binanceService: BinanceService;
 
   constructor() {
-    this.tradingViewService = new TradingViewService();
+    this.binanceService = new BinanceService();
   }
 
   async generateSignals(options: SignalGenerationOptions): Promise<TradingSignal[]> {
@@ -61,13 +61,13 @@ export class SignalGenerator {
     timeframe: string,
     riskTolerance: 'CONSERVATIVE' | 'MODERATE' | 'AGGRESSIVE'
   ): Promise<TradingSignal> {
-    // Get market data and technical indicators
-    const marketData = await this.tradingViewService.getHistoricalData(symbol, {
+    // Get market data and technical indicators from Binance
+    const marketData = await this.binanceService.getHistoricalData(symbol, {
       timeframe,
       limit: 200
     });
 
-    const technicalIndicators = await this.tradingViewService.calculateTechnicalIndicators(
+    const technicalIndicators = await this.binanceService.calculateTechnicalIndicators(
       marketData,
       ['rsi', 'macd', 'bollinger', 'sma', 'ema', 'stochastic']
     );

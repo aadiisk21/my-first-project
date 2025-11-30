@@ -150,8 +150,8 @@ UPSTASH_REDIS_REST_TOKEN=AUs4AAIncDI5ZjFkYjZjYjc3M2I0YTE3OGE0NmYzMWFkN2I2ZDNjMXA
 JWT_SECRET=your_jwt_secret_key
 FRONTEND_URL=https://oct-trading.netlify.app/
 
-# APIs
-TRADINGVIEW_API_KEY=your_tradingview_key
+# Binance APIs (Primary data source)
+BINANCE_API_URL=https://api.binance.com
 BINANCE_API_KEY=your_binance_key
 BINANCE_SECRET_KEY=your_binance_secret
 ```

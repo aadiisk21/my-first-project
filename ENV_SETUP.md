@@ -34,10 +34,10 @@ JWT_SECRET=your_jwt_secret_key (use a strong, random string)
 # Frontend URL - where your Next.js frontend is running
 FRONTEND_URL=http://localhost:3000
 
-# Trading APIs
-TRADINGVIEW_API_KEY=your_tradingview_key (optional, for TradingView integration)
-BINANCE_API_KEY=your_binance_key (for Binance data)
-BINANCE_SECRET_KEY=your_binance_secret (for Binance trading)
+# Trading APIs (Binance)
+BINANCE_API_URL=https://api.binance.com (Binance API endpoint)
+BINANCE_API_KEY=your_binance_key (for Binance market data)
+BINANCE_SECRET_KEY=your_binance_secret (for Binance trading, optional for read-only)
 ```
 
 ### 2. Required Services
@@ -82,19 +82,15 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 # Copy the output to JWT_SECRET in your .env file
 ```
 
-### 4. Setup Trading API Keys
-
-#### Binance (Required for Market Data)
+### 4. Setup Binance API Keys (Required for Market Data)
 
 1. Go to https://www.binance.com/en/account/login
 2. Navigate to API Management
 3. Create a new API key
-4. Copy `API Key` and `API Secret` to your `.env` file
+4. Copy `API Key` to `BINANCE_API_KEY` in your `.env` file
+5. Copy `API Secret` to `BINANCE_SECRET_KEY` in your `.env` file (required only for placing trades)
 
-#### TradingView (Optional)
-
-1. Get an API key from TradingView if using their feeds
-2. Add to `.env` as `TRADINGVIEW_API_KEY`
+**Note**: For read-only market data, you can leave `BINANCE_SECRET_KEY` empty or set it to a placeholder string.
 
 ### 5. Email Notifications (Optional)
 
@@ -151,11 +147,11 @@ ENABLE_EMAIL_NOTIFICATIONS=false # Send email alerts
 - `JWT_EXPIRY`: Token expiration time (default: 7d)
 - `REFRESH_TOKEN_SECRET`: Secret for refresh tokens
 
-### Trading APIs
+### Trading APIs (Binance Only)
 
-- `BINANCE_API_KEY`: Binance API key
-- `BINANCE_SECRET_KEY`: Binance API secret
-- `TRADINGVIEW_API_KEY`: TradingView API key
+- `BINANCE_API_URL`: Binance API endpoint (https://api.binance.com)
+- `BINANCE_API_KEY`: Binance API key for market data access
+- `BINANCE_SECRET_KEY`: Binance API secret (optional for read-only operations)
 
 ### Logging
 

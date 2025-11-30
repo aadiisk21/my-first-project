@@ -2,11 +2,9 @@ import express from 'express';
 import { strictRateLimiter } from '../middleware/rateLimiter';
 import { CustomError } from '../middleware/errorHandler';
 import { MarketData, TradingPair, TechnicalIndicators } from '../../src/types';
-import { TradingViewService } from '../services/tradingViewService';
 import { BinanceService } from '../services/binanceService';
 
 const router = express.Router();
-const tradingViewService = new TradingViewService();
 const binanceService = new BinanceService();
 
 // Get all available trading pairs
@@ -18,16 +16,16 @@ router.get('/pairs', strictRateLimiter, async (req, res) => {
 
     switch (category) {
       case 'crypto':
-        pairs = await tradingViewService.getCryptoPairs();
+        pairs = await binanceService.getCryptoPairs();
         break;
       case 'forex':
-        pairs = await tradingViewService.getForexPairs();
+        pairs = await binanceService.getForexPairs();
         break;
       case 'commodities':
-        pairs = await tradingViewService.getCommodityPairs();
+        pairs = await binanceService.getCommodityPairs();
         break;
       default:
-        pairs = await tradingViewService.getAllPairs();
+        pairs = await binanceService.getAllPairs();
     }
 
     res.json({
@@ -51,30 +49,19 @@ router.get('/pairs', strictRateLimiter, async (req, res) => {
 router.get('/price/:symbol', strictRateLimiter, async (req, res) => {
   try {
     const { symbol } = req.params;
-    const { exchange = 'binance' } = req.query;
 
     if (!symbol) {
       throw new CustomError('Symbol is required', 400);
     }
 
-    let priceData;
-
-    switch (exchange) {
-      case 'binance':
-        priceData = await binanceService.getCurrentPrice(symbol);
-        break;
-      case 'tradingview':
-        priceData = await tradingViewService.getCurrentPrice(symbol);
-        break;
-      default:
-        throw new CustomError(`Unsupported exchange: ${exchange as string}`, 400);
-    }
+    // Use Binance as primary source
+    const priceData = await binanceService.getCurrentPrice(symbol);
 
     res.json({
       success: true,
       data: {
         symbol,
-        exchange,
+        exchange: 'binance',
         ...priceData,
         timestamp: new Date().toISOString()
       }
@@ -112,13 +99,8 @@ router.get('/history/:symbol', strictRateLimiter, async (req, res) => {
 
     let marketData: MarketData[];
 
-    // Try to get data from TradingView first, fallback to Binance
-    try {
-      marketData = await tradingViewService.getHistoricalData(symbol, options);
-    } catch (tvError) {
-      console.warn(`TradingView API failed for ${symbol}, falling back to Binance`);
-      marketData = await binanceService.getHistoricalData(symbol, options);
-    }
+    // Fetch data from Binance
+    marketData = await binanceService.getHistoricalData(symbol, options);
 
     res.json({
       success: true,
@@ -155,12 +137,12 @@ router.get('/indicators/:symbol', strictRateLimiter, async (req, res) => {
     }
 
     const requestedIndicators = (indicators as string).split(',').map(i => i.trim());
-    const marketData = await tradingViewService.getHistoricalData(symbol, {
+    const marketData = await binanceService.getHistoricalData(symbol, {
       timeframe: timeframe as string,
       limit: 200 // Need more data for accurate indicators
     });
 
-    const technicalIndicators = await tradingViewService.calculateTechnicalIndicators(
+    const technicalIndicators = await binanceService.calculateTechnicalIndicators(
       marketData,
       requestedIndicators
     );
@@ -196,10 +178,10 @@ router.get('/overview', async (req, res) => {
       volumeLeaders,
       marketCapLeaders
     ] = await Promise.all([
-      tradingViewService.getTopGainers(category as string, limitNum),
-      tradingViewService.getTopLosers(category as string, limitNum),
-      tradingViewService.getVolumeLeaders(category as string, limitNum),
-      tradingViewService.getMarketCapLeaders(category as string, limitNum)
+      binanceService.getTopGainers(category as string, limitNum),
+      binanceService.getTopLosers(category as string, limitNum),
+      binanceService.getVolumeLeaders(category as string, limitNum),
+      binanceService.getMarketCapLeaders(category as string, limitNum)
     ]);
 
     res.json({
@@ -230,7 +212,7 @@ router.get('/search', async (req, res) => {
       throw new CustomError('Search query must be at least 2 characters', 400);
     }
 
-    const searchResults = await tradingViewService.searchSymbols(
+    const searchResults = await binanceService.searchSymbols(
       q.trim(),
       category as string,
       parseInt(limit as string)
@@ -264,7 +246,7 @@ router.get('/sentiment/:symbol', strictRateLimiter, async (req, res) => {
       throw new CustomError('Symbol is required', 400);
     }
 
-    const sentimentData = await tradingViewService.getMarketSentiment(symbol);
+    const sentimentData = await binanceService.getMarketSentiment(symbol);
 
     res.json({
       success: true,

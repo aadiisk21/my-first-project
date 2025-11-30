@@ -65,12 +65,11 @@ my-first-project/
 ├── backend/                       # Backend API server
 │   ├── server.ts                 # Express.js server setup
 │   ├── api/                      # API route handlers
-│   │   ├── trading.ts            # Market data endpoints
+│   │   ├── trading.ts            # Market data endpoints (Binance)
 │   │   ├── signals.ts            # Signal management endpoints
 │   │   └── users.ts              # User authentication endpoints
 │   ├── services/                 # Business logic services
-│   │   ├── tradingViewService.ts  # TradingView API integration
-│   │   ├── binanceService.ts     # Binance API integration
+│   │   ├── binanceService.ts     # Binance API integration (primary)
 │   │   └── signalGenerator.ts   # AI signal generation engine
 │   ├── websocket/                # WebSocket handlers
 │   │   └── handler.ts            # Real-time data streaming
