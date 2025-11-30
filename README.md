@@ -5,6 +5,7 @@ A comprehensive AI-powered trading bot website that provides real-time cryptocur
 ## Features
 
 ### 🚀 Core Functionality
+
 - **Real-time Market Data**: Live price feeds from multiple exchanges
 - **AI Signal Generation**: Machine learning-powered trading signals with confidence scoring
 - **Advanced Technical Analysis**: RSI, MACD, Bollinger Bands, Stochastic indicators
@@ -13,6 +14,7 @@ A comprehensive AI-powered trading bot website that provides real-time cryptocur
 - **Risk Management**: Configurable risk tolerance levels (Conservative, Moderate, Aggressive)
 
 ### 🤖 AI/ML Components
+
 - **LSTM Price Prediction**: TensorFlow models for forecasting price movements
 - **Technical Indicators**: Comprehensive market data preprocessing pipeline
 - **Signal Confidence**: AI-calculated confidence scores for each signal
@@ -20,6 +22,7 @@ A comprehensive AI-powered trading bot website that provides real-time cryptocur
 - **Backtesting Engine**: Historical strategy validation and performance metrics
 
 ### 💹 Trading Features
+
 - **Multi-Pair Support**: BTC, ETH, and 50+ cryptocurrency pairs
 - **Signal Types**: Buy, Sell, and Hold recommendations
 - **Entry/Exit Points**: Stop-loss and take-profit level suggestions
@@ -27,6 +30,7 @@ A comprehensive AI-powered trading bot website that provides real-time cryptocur
 - **Sentiment Analysis**: Market sentiment indicators and scoring
 
 ### 🎨 User Interface
+
 - **Responsive Design**: Mobile-friendly with Tailwind CSS
 - **Dark/Light Themes**: Automatic theme switching support
 - **Real-time Updates**: WebSocket-based live data streaming
@@ -34,6 +38,7 @@ A comprehensive AI-powered trading bot website that provides real-time cryptocur
 - **Signal Filtering**: Advanced filtering by type, risk, confidence, and pair
 
 ### 🔧 Technical Architecture
+
 - **Frontend**: Next.js 14+ with TypeScript and Zustand state management
 - **Backend**: Node.js/Express.js with WebSocket support
 - **Database**: PostgreSQL with Redis caching layer
@@ -91,6 +96,7 @@ my-first-project/
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 18+ and npm
 - Python 3.9+ with pip
 - PostgreSQL database
@@ -98,6 +104,7 @@ my-first-project/
 - Environment variables configuration
 
 ### Frontend Setup
+
 ```bash
 cd my-first-project
 npm install
@@ -105,6 +112,7 @@ npm run dev
 ```
 
 ### Backend Setup
+
 ```bash
 cd backend
 npm install
@@ -112,6 +120,7 @@ npm start
 ```
 
 ### ML Environment Setup
+
 ```bash
 cd ml
 pip install -r requirements.txt
@@ -119,6 +128,7 @@ python models.py  # Train the LSTM models
 ```
 
 ### Environment Variables
+
 Create a `.env` file in the root directory:
 
 ```env
@@ -150,6 +160,7 @@ BINANCE_SECRET_KEY=your_binance_secret
 ## Key Features Implementation
 
 ### 1. Real-time Trading Chart
+
 - Custom canvas-based candlestick chart implementation
 - Technical indicator overlays (SMA, EMA, Bollinger Bands, RSI, MACD)
 - Interactive tooltips and crosshair
@@ -157,6 +168,7 @@ BINANCE_SECRET_KEY=your_binance_secret
 - Volume chart integration
 
 ### 2. AI Signal Generation
+
 - Multi-feature LSTM model for price prediction
 - Technical indicator analysis (RSI, MACD, Stochastic, Bollinger Bands)
 - Pattern recognition using CNN models
@@ -164,6 +176,7 @@ BINANCE_SECRET_KEY=your_binance_secret
 - Risk-adjusted position sizing recommendations
 
 ### 3. WebSocket Real-time Data
+
 - Live price updates streaming
 - Signal push notifications
 - Connection management and cleanup
@@ -171,6 +184,7 @@ BINANCE_SECRET_KEY=your_binance_secret
 - Rate limiting and security
 
 ### 4. Database Schema
+
 - Users table for authentication and preferences
 - Signals table for generated trading signals
 - Market data table for historical price data
@@ -180,6 +194,7 @@ BINANCE_SECRET_KEY=your_binance_secret
 ## API Endpoints
 
 ### Trading Data
+
 - `GET /api/trading/pairs` - Get available trading pairs
 - `GET /api/trading/price/:symbol` - Get current price data
 - `GET /api/trading/history/:symbol` - Get historical market data
@@ -187,6 +202,7 @@ BINANCE_SECRET_KEY=your_binance_secret
 - `GET /api/trading/overview` - Market overview statistics
 
 ### Signal Management
+
 - `GET /api/signals` - Get trading signals with filtering
 - `POST /api/signals/generate` - Generate new AI signals
 - `GET /api/signals/:id` - Get specific signal details
@@ -194,6 +210,7 @@ BINANCE_SECRET_KEY=your_binance_secret
 - `DELETE /api/signals/:id` - Delete signal
 
 ### User Management
+
 - `POST /api/users/register` - User registration
 - `POST /api/users/login` - User authentication
 - `POST /api/users/logout` - User logout
@@ -203,6 +220,7 @@ BINANCE_SECRET_KEY=your_binance_secret
 ## Machine Learning Pipeline
 
 ### Data Processing
+
 - Real-time market data ingestion from exchanges
 - Feature engineering with 50+ technical indicators
 - Data normalization and scaling
@@ -210,6 +228,7 @@ BINANCE_SECRET_KEY=your_binance_secret
 - Outlier detection and data quality validation
 
 ### Model Architecture
+
 - 3-layer LSTM network with dropout
 - CNN for chart pattern recognition
 - Ensemble method combining multiple signals
@@ -219,6 +238,7 @@ BINANCE_SECRET_KEY=your_binance_secret
 ## Deployment
 
 ### Production Setup
+
 - Docker containerization for all services
 - Kubernetes cluster orchestration
 - Load balancing and auto-scaling

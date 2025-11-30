@@ -34,13 +34,16 @@ router.get('/pairs', strictRateLimiter, async (req, res) => {
         pairs,
         category,
         total: pairs.length,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch trading pairs'
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Failed to fetch trading pairs',
     });
   }
 });
@@ -63,14 +66,15 @@ router.get('/price/:symbol', strictRateLimiter, async (req, res) => {
         symbol,
         exchange: 'binance',
         ...priceData,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   } catch (error) {
     const statusCode = error instanceof CustomError ? error.statusCode : 500;
     res.status(statusCode).json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch price data'
+      error:
+        error instanceof Error ? error.message : 'Failed to fetch price data',
     });
   }
 });
@@ -79,12 +83,7 @@ router.get('/price/:symbol', strictRateLimiter, async (req, res) => {
 router.get('/history/:symbol', strictRateLimiter, async (req, res) => {
   try {
     const { symbol } = req.params;
-    const {
-      timeframe = '1h',
-      limit = '100',
-      startDate,
-      endDate
-    } = req.query;
+    const { timeframe = '1h', limit = '100', startDate, endDate } = req.query;
 
     if (!symbol) {
       throw new CustomError('Symbol is required', 400);
@@ -94,7 +93,7 @@ router.get('/history/:symbol', strictRateLimiter, async (req, res) => {
       timeframe: timeframe as string,
       limit: parseInt(limit as string),
       startDate: startDate ? new Date(startDate as string) : undefined,
-      endDate: endDate ? new Date(endDate as string) : undefined
+      endDate: endDate ? new Date(endDate as string) : undefined,
     };
 
     let marketData: MarketData[];
@@ -111,14 +110,17 @@ router.get('/history/:symbol', strictRateLimiter, async (req, res) => {
         count: marketData.length,
         startDate: marketData[0]?.timestamp,
         endDate: marketData[marketData.length - 1]?.timestamp,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   } catch (error) {
     const statusCode = error instanceof CustomError ? error.statusCode : 500;
     res.status(statusCode).json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch historical data'
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Failed to fetch historical data',
     });
   }
 });
@@ -127,25 +129,26 @@ router.get('/history/:symbol', strictRateLimiter, async (req, res) => {
 router.get('/indicators/:symbol', strictRateLimiter, async (req, res) => {
   try {
     const { symbol } = req.params;
-    const {
-      timeframe = '1h',
-      indicators = 'rsi,macd,bollinger,sma,ema'
-    } = req.query;
+    const { timeframe = '1h', indicators = 'rsi,macd,bollinger,sma,ema' } =
+      req.query;
 
     if (!symbol) {
       throw new CustomError('Symbol is required', 400);
     }
 
-    const requestedIndicators = (indicators as string).split(',').map(i => i.trim());
+    const requestedIndicators = (indicators as string)
+      .split(',')
+      .map((i) => i.trim());
     const marketData = await binanceService.getHistoricalData(symbol, {
       timeframe: timeframe as string,
-      limit: 200 // Need more data for accurate indicators
+      limit: 200, // Need more data for accurate indicators
     });
 
-    const technicalIndicators = await binanceService.calculateTechnicalIndicators(
-      marketData,
-      requestedIndicators
-    );
+    const technicalIndicators =
+      await binanceService.calculateTechnicalIndicators(
+        marketData,
+        requestedIndicators
+      );
 
     res.json({
       success: true,
@@ -154,14 +157,17 @@ router.get('/indicators/:symbol', strictRateLimiter, async (req, res) => {
         timeframe,
         indicators: requestedIndicators,
         data: technicalIndicators,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   } catch (error) {
     const statusCode = error instanceof CustomError ? error.statusCode : 500;
     res.status(statusCode).json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to calculate technical indicators'
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Failed to calculate technical indicators',
     });
   }
 });
@@ -172,17 +178,13 @@ router.get('/overview', async (req, res) => {
     const { category = 'crypto', limit = '20' } = req.query;
     const limitNum = parseInt(limit as string);
 
-    const [
-      topGainers,
-      topLosers,
-      volumeLeaders,
-      marketCapLeaders
-    ] = await Promise.all([
-      binanceService.getTopGainers(category as string, limitNum),
-      binanceService.getTopLosers(category as string, limitNum),
-      binanceService.getVolumeLeaders(category as string, limitNum),
-      binanceService.getMarketCapLeaders(category as string, limitNum)
-    ]);
+    const [topGainers, topLosers, volumeLeaders, marketCapLeaders] =
+      await Promise.all([
+        binanceService.getTopGainers(category as string, limitNum),
+        binanceService.getTopLosers(category as string, limitNum),
+        binanceService.getVolumeLeaders(category as string, limitNum),
+        binanceService.getMarketCapLeaders(category as string, limitNum),
+      ]);
 
     res.json({
       success: true,
@@ -192,13 +194,16 @@ router.get('/overview', async (req, res) => {
         topLosers,
         volumeLeaders,
         marketCapLeaders,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch market overview'
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Failed to fetch market overview',
     });
   }
 });
@@ -225,14 +230,15 @@ router.get('/search', async (req, res) => {
         category,
         results: searchResults,
         count: searchResults.length,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   } catch (error) {
     const statusCode = error instanceof CustomError ? error.statusCode : 500;
     res.status(statusCode).json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to search symbols'
+      error:
+        error instanceof Error ? error.message : 'Failed to search symbols',
     });
   }
 });
@@ -253,14 +259,17 @@ router.get('/sentiment/:symbol', strictRateLimiter, async (req, res) => {
       data: {
         symbol,
         ...sentimentData,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   } catch (error) {
     const statusCode = error instanceof CustomError ? error.statusCode : 500;
     res.status(statusCode).json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch market sentiment'
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Failed to fetch market sentiment',
     });
   }
 });
@@ -288,14 +297,17 @@ router.post('/subscribe', (req, res) => {
         timeframes: timeframes || ['1h'],
         status: 'active',
         expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   } catch (error) {
     const statusCode = error instanceof CustomError ? error.statusCode : 500;
     res.status(statusCode).json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to create subscription'
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Failed to create subscription',
     });
   }
 });

@@ -65,7 +65,10 @@
 
 /* Base layer */
 @layer base {
-  * { border-color: rgb(var(--border)); }
+  * {
+    border-color: rgb(var(--border));
+  }
+
   body {
     background-color: rgb(var(--background));
     color: rgb(var(--foreground));
@@ -84,35 +87,45 @@
   }
 
   .signal-sell {
-    @apply text-[rgb(var(--sell))] border-[2px] border-[rgba(var(--sell),0.2)];
-    background-color: rgba(var(--sell),0.1);
+    @apply text-[rgb(var(--sell))] border-[2px] border-[rgba(var(--sell), 0.2)];
+    background-color: rgba(var(--sell), 0.1);
   }
 
   .signal-hold {
-    @apply text-[rgb(var(--hold))] border-[2px] border-[rgba(var(--hold),0.2)];
-    background-color: rgba(var(--hold),0.1);
+    @apply text-[rgb(var(--hold))] border-[2px] border-[rgba(var(--hold), 0.2)];
+    background-color: rgba(var(--hold), 0.1);
   }
 
   /* Price text */
-  .price-up { color: rgb(var(--buy)); }
-  .price-down { color: rgb(var(--sell)); }
+  .price-up {
+    color: rgb(var(--buy));
+  }
+
+  .price-down {
+    color: rgb(var(--sell));
+  }
 
   /* Glass effect */
-  .glass-effect { 
-    background-color: rgba(var(--background),0.8); 
-    @apply backdrop-blur-sm border-[rgba(var(--border),0.5)];
+  .glass-effect {
+    background-color: rgba(var(--background), 0.8);
+    @apply backdrop-blur-sm border-[rgba(var(--border), 0.5)];
   }
 
   /* Trading card */
-  .trading-card { 
-    @apply rounded-lg border shadow-sm; 
+  .trading-card {
+    @apply rounded-lg border shadow-sm;
     background-color: rgb(var(--background));
     color: rgb(var(--foreground));
   }
 
   /* Confidence bar */
-  .confidence-bar { @apply h-2 rounded-full bg-[rgb(var(--muted))] overflow-hidden; }
-  .confidence-fill { @apply h-full rounded-full transition-all duration-300 ease-in-out; }
+  .confidence-bar {
+    @apply h-2 rounded-full bg-[rgb(var(--muted))] overflow-hidden;
+  }
+
+  .confidence-fill {
+    @apply h-full rounded-full transition-all duration-300 ease-in-out;
+  }
 
   /* Chart container */
   .chart-container {
@@ -128,9 +141,23 @@
 
 /* Utilities layer */
 @layer utilities {
-  .text-shadow { text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-  .glow { box-shadow: 0 0 20px rgba(0, 102, 255, 0.3); }
-  .signal-glow-buy { box-shadow: 0 0 15px rgba(var(--buy),0.3); }
-  .signal-glow-sell { box-shadow: 0 0 15px rgba(var(--sell),0.3); }
-  .signal-glow-hold { box-shadow: 0 0 15px rgba(var(--hold),0.3); }
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .glow {
+    box-shadow: 0 0 20px rgba(0, 102, 255, 0.3);
+  }
+
+  .signal-glow-buy {
+    box-shadow: 0 0 15px rgba(var(--buy), 0.3);
+  }
+
+  .signal-glow-sell {
+    box-shadow: 0 0 15px rgba(var(--sell), 0.3);
+  }
+
+  .signal-glow-hold {
+    box-shadow: 0 0 15px rgba(var(--hold), 0.3);
+  }
 }

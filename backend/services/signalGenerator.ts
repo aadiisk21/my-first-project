@@ -1,4 +1,8 @@
-import { TradingSignal, MarketData, TechnicalIndicators } from '../../src/types';
+import {
+  TradingSignal,
+  MarketData,
+  TechnicalIndicators,
+} from '../../src/types';
 import { BinanceService } from './binanceService';
 
 interface SignalGenerationOptions {
@@ -29,20 +33,29 @@ export class SignalGenerator {
     this.binanceService = new BinanceService();
   }
 
-  async generateSignals(options: SignalGenerationOptions): Promise<TradingSignal[]> {
+  async generateSignals(
+    options: SignalGenerationOptions
+  ): Promise<TradingSignal[]> {
     const { symbols, timeframes, riskTolerance, minConfidence } = options;
     const signals: TradingSignal[] = [];
 
     for (const symbol of symbols) {
       for (const timeframe of timeframes) {
         try {
-          const signal = await this.generateSignalForSymbol(symbol, timeframe, riskTolerance);
+          const signal = await this.generateSignalForSymbol(
+            symbol,
+            timeframe,
+            riskTolerance
+          );
 
           if (signal.confidence >= minConfidence) {
             signals.push(signal);
           }
         } catch (error) {
-          console.error(`Failed to generate signal for ${symbol} ${timeframe}:`, error);
+          console.error(
+            `Failed to generate signal for ${symbol} ${timeframe}:`,
+            error
+          );
         }
       }
     }
@@ -64,17 +77,29 @@ export class SignalGenerator {
     // Get market data and technical indicators from Binance
     const marketData = await this.binanceService.getHistoricalData(symbol, {
       timeframe,
-      limit: 200
+      limit: 200,
     });
 
-    const technicalIndicators = await this.binanceService.calculateTechnicalIndicators(
-      marketData,
-      ['rsi', 'macd', 'bollinger', 'sma', 'ema', 'stochastic']
-    );
+    const technicalIndicators =
+      await this.binanceService.calculateTechnicalIndicators(marketData, [
+        'rsi',
+        'macd',
+        'bollinger',
+        'sma',
+        'ema',
+        'stochastic',
+      ]);
 
     const currentPrice = marketData[marketData.length - 1].close;
-    const signalType = this.analyzeMarketCondition(technicalIndicators, riskTolerance);
-    const confidence = this.calculateConfidence(technicalIndicators, signalType, riskTolerance);
+    const signalType = this.analyzeMarketCondition(
+      technicalIndicators,
+      riskTolerance
+    );
+    const confidence = this.calculateConfidence(
+      technicalIndicators,
+      signalType,
+      riskTolerance
+    );
 
     const { stopLoss, takeProfit } = this.calculateRiskLevels(
       currentPrice,
@@ -83,7 +108,10 @@ export class SignalGenerator {
       riskTolerance
     );
 
-    const technicalRationale = this.generateTechnicalRationale(technicalIndicators, signalType);
+    const technicalRationale = this.generateTechnicalRationale(
+      technicalIndicators,
+      signalType
+    );
 
     return {
       id: `signal_${Date.now()}_${symbol.replace('/', '')}`,
@@ -97,13 +125,19 @@ export class SignalGenerator {
       timeframe,
       indicators: {
         rsi: technicalIndicators.rsi[technicalIndicators.rsi.length - 1] || 50,
-        macd: technicalIndicators.macd.macd[technicalIndicators.macd.macd.length - 1] || 0,
-        bollinger: technicalIndicators.bollingerBands.upper[technicalIndicators.bollingerBands.upper.length - 1] || 0,
-        volume: marketData[marketData.length - 1].volume
+        macd:
+          technicalIndicators.macd.macd[
+            technicalIndicators.macd.macd.length - 1
+          ] || 0,
+        bollinger:
+          technicalIndicators.bollingerBands.upper[
+            technicalIndicators.bollingerBands.upper.length - 1
+          ] || 0,
+        volume: marketData[marketData.length - 1].volume,
       },
       technicalRationale,
       riskLevel: this.getRiskLevel(confidence, riskTolerance),
-      expiresAt: new Date(Date.now() + this.getExpirationTime(timeframe))
+      expiresAt: new Date(Date.now() + this.getExpirationTime(timeframe)),
     };
   }
 
@@ -112,9 +146,12 @@ export class SignalGenerator {
     riskTolerance: 'CONSERVATIVE' | 'MODERATE' | 'AGGRESSIVE'
   ): 'BUY' | 'SELL' | 'HOLD' {
     const currentRSI = indicators.rsi[indicators.rsi.length - 1] || 50;
-    const currentMACD = indicators.macd.macd[indicators.macd.macd.length - 1] || 0;
-    const currentMACDSignal = indicators.macd.signal[indicators.macd.signal.length - 1] || 0;
-    const currentStoch = indicators.stochastic.k[indicators.stochastic.k.length - 1] || 50;
+    const currentMACD =
+      indicators.macd.macd[indicators.macd.macd.length - 1] || 0;
+    const currentMACDSignal =
+      indicators.macd.signal[indicators.macd.signal.length - 1] || 0;
+    const currentStoch =
+      indicators.stochastic.k[indicators.stochastic.k.length - 1] || 50;
     const currentSMA = indicators.sma[indicators.sma.length - 1] || 0;
     const currentEMA = indicators.ema[indicators.ema.length - 1] || 0;
 
@@ -167,7 +204,7 @@ export class SignalGenerator {
     const riskMultiplier = {
       CONSERVATIVE: 0.5,
       MODERATE: 1.0,
-      AGGRESSIVE: 1.5
+      AGGRESSIVE: 1.5,
     }[riskTolerance];
 
     score *= riskMultiplier;
@@ -188,9 +225,14 @@ export class SignalGenerator {
     riskTolerance: 'CONSERVATIVE' | 'MODERATE' | 'AGGRESSIVE'
   ): number {
     const currentRSI = indicators.rsi[indicators.rsi.length - 1] || 50;
-    const currentMACD = indicators.macd.macd[indicators.macd.macd.length - 1] || 0;
-    const currentStoch = indicators.stochastic.k[indicators.stochastic.k.length - 1] || 50;
-    const currentVolume = (indicators.volume && indicators.volume.length > 0) ? indicators.volume[indicators.volume.length - 1] : 0;
+    const currentMACD =
+      indicators.macd.macd[indicators.macd.macd.length - 1] || 0;
+    const currentStoch =
+      indicators.stochastic.k[indicators.stochastic.k.length - 1] || 50;
+    const currentVolume =
+      indicators.volume && indicators.volume.length > 0
+        ? indicators.volume[indicators.volume.length - 1]
+        : 0;
 
     let confidence = 50; // Base confidence
 
@@ -213,7 +255,12 @@ export class SignalGenerator {
     }
 
     // Volume contribution (higher volume increases confidence)
-    const avgVolume = (indicators.volume && indicators.volume.length >= 20) ? indicators.volume.slice(-20).reduce((a: number, b: number) => a + b, 0) / 20 : 0;
+    const avgVolume =
+      indicators.volume && indicators.volume.length >= 20
+        ? indicators.volume
+            .slice(-20)
+            .reduce((a: number, b: number) => a + b, 0) / 20
+        : 0;
     if (currentVolume > avgVolume * 1.2) {
       confidence += 10;
     }
@@ -222,7 +269,7 @@ export class SignalGenerator {
     const riskAdjustment = {
       CONSERVATIVE: -10,
       MODERATE: 0,
-      AGGRESSIVE: 10
+      AGGRESSIVE: 10,
     }[riskTolerance];
 
     confidence += riskAdjustment;
@@ -245,7 +292,7 @@ export class SignalGenerator {
     const riskMultiplier = {
       CONSERVATIVE: 1.5,
       MODERATE: 2.0,
-      AGGRESSIVE: 3.0
+      AGGRESSIVE: 3.0,
     }[riskTolerance];
 
     const riskAmount = currentATR * riskMultiplier;
@@ -253,12 +300,12 @@ export class SignalGenerator {
     if (signalType === 'BUY') {
       return {
         stopLoss: currentPrice - riskAmount,
-        takeProfit: currentPrice + (riskAmount * 2) // 2:1 risk-reward ratio
+        takeProfit: currentPrice + riskAmount * 2, // 2:1 risk-reward ratio
       };
     } else {
       return {
         stopLoss: currentPrice + riskAmount,
-        takeProfit: currentPrice - (riskAmount * 2) // 2:1 risk-reward ratio
+        takeProfit: currentPrice - riskAmount * 2, // 2:1 risk-reward ratio
       };
     }
   }
@@ -286,9 +333,12 @@ export class SignalGenerator {
     signalType: 'BUY' | 'SELL' | 'HOLD'
   ): string {
     const currentRSI = indicators.rsi[indicators.rsi.length - 1] || 50;
-    const currentMACD = indicators.macd.macd[indicators.macd.macd.length - 1] || 0;
-    const currentMACDSignal = indicators.macd.signal[indicators.macd.signal.length - 1] || 0;
-    const currentStoch = indicators.stochastic.k[indicators.stochastic.k.length - 1] || 50;
+    const currentMACD =
+      indicators.macd.macd[indicators.macd.macd.length - 1] || 0;
+    const currentMACDSignal =
+      indicators.macd.signal[indicators.macd.signal.length - 1] || 0;
+    const currentStoch =
+      indicators.stochastic.k[indicators.stochastic.k.length - 1] || 50;
 
     const rationales = [];
 
@@ -343,16 +393,19 @@ export class SignalGenerator {
 
   private getExpirationTime(timeframe: string): number {
     const timeframeMultipliers = {
-      '1m': 5 * 60 * 1000,      // 5 minutes
-      '5m': 30 * 60 * 1000,     // 30 minutes
-      '15m': 60 * 60 * 1000,    // 1 hour
+      '1m': 5 * 60 * 1000, // 5 minutes
+      '5m': 30 * 60 * 1000, // 30 minutes
+      '15m': 60 * 60 * 1000, // 1 hour
       '30m': 2 * 60 * 60 * 1000, // 2 hours
-      '1h': 4 * 60 * 60 * 1000,   // 4 hours
-      '4h': 24 * 60 * 60 * 1000,  // 24 hours
-      '1d': 3 * 24 * 60 * 60 * 1000 // 3 days
+      '1h': 4 * 60 * 60 * 1000, // 4 hours
+      '4h': 24 * 60 * 60 * 1000, // 24 hours
+      '1d': 3 * 24 * 60 * 60 * 1000, // 3 days
     };
 
-    return timeframeMultipliers[timeframe as keyof typeof timeframeMultipliers] || 4 * 60 * 60 * 1000;
+    return (
+      timeframeMultipliers[timeframe as keyof typeof timeframeMultipliers] ||
+      4 * 60 * 60 * 1000
+    );
   }
 
   // Database operations (would integrate with actual database)
@@ -382,31 +435,38 @@ export class SignalGenerator {
           rsi: 35,
           macd: 0.5,
           bollinger: -0.2,
-          volume: 1000000
+          volume: 1000000,
         },
-        technicalRationale: 'RSI oversold, MACD bullish crossover, price near lower Bollinger Band',
+        technicalRationale:
+          'RSI oversold, MACD bullish crossover, price near lower Bollinger Band',
         riskLevel: 'MEDIUM',
-        expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000)
-      }
+        expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000),
+      },
     ];
 
     // Apply filters
     let filteredSignals = mockSignals;
 
     if (options.pair) {
-      filteredSignals = filteredSignals.filter(s => s.pair === options.pair);
+      filteredSignals = filteredSignals.filter((s) => s.pair === options.pair);
     }
 
     if (options.signalType) {
-      filteredSignals = filteredSignals.filter(s => s.signalType === options.signalType);
+      filteredSignals = filteredSignals.filter(
+        (s) => s.signalType === options.signalType
+      );
     }
 
     if (options.confidenceMin) {
-      filteredSignals = filteredSignals.filter(s => s.confidence >= options.confidenceMin!);
+      filteredSignals = filteredSignals.filter(
+        (s) => s.confidence >= options.confidenceMin!
+      );
     }
 
     if (options.riskLevel) {
-      filteredSignals = filteredSignals.filter(s => s.riskLevel === options.riskLevel);
+      filteredSignals = filteredSignals.filter(
+        (s) => s.riskLevel === options.riskLevel
+      );
     }
 
     // Sort
@@ -423,11 +483,14 @@ export class SignalGenerator {
 
     // Paginate
     const start = (options.page - 1) * options.limit;
-    const paginatedSignals = filteredSignals.slice(start, start + options.limit);
+    const paginatedSignals = filteredSignals.slice(
+      start,
+      start + options.limit
+    );
 
     return {
       data: paginatedSignals,
-      total: filteredSignals.length
+      total: filteredSignals.length,
     };
   }
 
@@ -436,7 +499,10 @@ export class SignalGenerator {
     return null;
   }
 
-  async updateSignal(id: string, updates: Partial<TradingSignal>): Promise<TradingSignal | null> {
+  async updateSignal(
+    id: string,
+    updates: Partial<TradingSignal>
+  ): Promise<TradingSignal | null> {
     // Mock implementation
     return null;
   }
@@ -455,21 +521,27 @@ export class SignalGenerator {
     return [];
   }
 
-  async getSignalsForPair(pair: string, options: {
-    timeframe: string;
-    limit: number;
-    signalType?: 'BUY' | 'SELL' | 'HOLD';
-  }): Promise<TradingSignal[]> {
+  async getSignalsForPair(
+    pair: string,
+    options: {
+      timeframe: string;
+      limit: number;
+      signalType?: 'BUY' | 'SELL' | 'HOLD';
+    }
+  ): Promise<TradingSignal[]> {
     // Mock implementation
     return [];
   }
 
-  async validateSignal(id: string, validation: {
-    outcome: 'SUCCESS' | 'FAILURE' | 'PARTIAL';
-    actualEntryPrice?: number;
-    actualExitPrice?: number;
-    notes?: string;
-  }): Promise<TradingSignal> {
+  async validateSignal(
+    id: string,
+    validation: {
+      outcome: 'SUCCESS' | 'FAILURE' | 'PARTIAL';
+      actualEntryPrice?: number;
+      actualExitPrice?: number;
+      notes?: string;
+    }
+  ): Promise<TradingSignal> {
     // Mock implementation
     throw new Error('Signal validation not implemented');
   }
@@ -492,7 +564,7 @@ export class SignalGenerator {
       averageConfidence: 75,
       averageReturn: 0.05,
       maxDrawdown: 0.08,
-      sharpeRatio: 1.2
+      sharpeRatio: 1.2,
     };
   }
 
@@ -503,7 +575,7 @@ export class SignalGenerator {
       '60-70': 0.65,
       '70-80': 0.75,
       '80-90': 0.85,
-      '90-100': 0.92
+      '90-100': 0.92,
     };
   }
 }
