@@ -19,7 +19,6 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
 
   // Select only the pieces of state we need to avoid subscribing to the whole store
-  const storeSelectedPair = useTradingStore((s) => s.selectedPair);
   const pairs = useTradingStore((s) => s.pairs);
   const activeSignals = useTradingStore((s) => s.activeSignals);
   const storeIsLoading = useTradingStore((s) => s.isLoading);

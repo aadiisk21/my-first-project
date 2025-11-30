@@ -85,7 +85,7 @@ export class CacheService {
 
   async set(
     key: string,
-    value: any,
+    value: unknown,
     expireInSeconds: number = 3600
   ): Promise<void> {
     try {
@@ -97,7 +97,7 @@ export class CacheService {
     }
   }
 
-  async get<T = any>(key: string): Promise<T | null> {
+  async get<T = unknown>(key: string): Promise<T | null> {
     try {
       const value = await this.client.get(key);
       if (value === null) return null;
@@ -130,7 +130,7 @@ export class CacheService {
 
   async setWithTTL(
     key: string,
-    value: any,
+    value: unknown,
     ttlSeconds: number
   ): Promise<void> {
     try {
@@ -174,39 +174,39 @@ export class CacheService {
   async cacheMarketData(
     symbol: string,
     timeframe: string,
-    data: any[],
+    data: unknown[],
     ttlSeconds: number = 300
   ): Promise<void> {
     const key = `market_data:${symbol}:${timeframe}`;
     await this.set(key, data, ttlSeconds);
   }
 
-  async getMarketData(symbol: string, timeframe: string): Promise<any[] | null> {
+  async getMarketData(symbol: string, timeframe: string): Promise<unknown[] | null> {
     const key = `market_data:${symbol}:${timeframe}`;
-    return this.get<any[]>(key);
+    return this.get<unknown[]>(key);
   }
 
   // Signal caching
   async cacheSignals(
-    signals: any[],
+    signals: unknown[],
     ttlSeconds: number = 1800
   ): Promise<void> {
     const key = 'signals:active';
     await this.set(key, signals, ttlSeconds);
   }
 
-  async getSignals(): Promise<any[] | null> {
+  async getSignals(): Promise<unknown[] | null> {
     const key = 'signals:active';
-    return this.get<any[]>(key);
+    return this.get<unknown[]>(key);
   }
 
   // User session caching
-  async setUserSession(userId: string, sessionData: any, ttlSeconds: number = 86400): Promise<void> {
+  async setUserSession(userId: string, sessionData: unknown, ttlSeconds: number = 86400): Promise<void> {
     const key = `session:${userId}`;
     await this.set(key, sessionData, ttlSeconds);
   }
 
-  async getUserSession(userId: string): Promise<any | null> {
+  async getUserSession(userId: string): Promise<unknown | null> {
     const key = `session:${userId}`;
     return this.get(key);
   }
