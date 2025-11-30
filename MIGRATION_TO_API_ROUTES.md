@@ -7,6 +7,7 @@ This is the **quickest and easiest** solution to get your backend working on Ren
 ## Step 1: Create API Routes Structure
 
 Create these directories:
+
 ```
 src/app/api/
 ├── auth/
@@ -82,23 +83,25 @@ export async function POST(req: NextRequest) {
       userId: user.id,
       username: user.username,
       email: user.email,
-      token
+      token,
     });
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        user: {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          firstName: user.first_name,
-          lastName: user.last_name
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          user: {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            firstName: user.first_name,
+            lastName: user.last_name,
+          },
+          token,
         },
-        token
-      }
-    }, { status: 201 });
-
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('Register error:', error);
     return NextResponse.json(
@@ -125,18 +128,20 @@ Migrate these endpoints the same way:
 ## Step 4: Update Frontend API Calls
 
 **Current** (won't work):
+
 ```typescript
 const response = await fetch('http://localhost:3001/api/users/login', {
   method: 'POST',
-  body: JSON.stringify({ email, password })
+  body: JSON.stringify({ email, password }),
 });
 ```
 
 **New** (after migration):
+
 ```typescript
 const response = await fetch('/api/auth/login', {
   method: 'POST',
-  body: JSON.stringify({ email, password })
+  body: JSON.stringify({ email, password }),
 });
 ```
 
@@ -145,6 +150,7 @@ const response = await fetch('/api/auth/login', {
 ## Step 5: Create Environment Variables
 
 **Update** `.env`:
+
 ```env
 # Keep existing vars + add Next.js specific:
 NEXT_PUBLIC_API_URL=/api

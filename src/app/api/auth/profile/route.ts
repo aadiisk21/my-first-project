@@ -76,7 +76,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to get user profile',
+        error:
+          error instanceof Error ? error.message : 'Failed to get user profile',
       },
       { status: 500 }
     );

@@ -49,12 +49,14 @@ Your project has a **mixed architecture problem**:
 Convert your Express backend to Next.js API Routes (easiest for Render/Netlify):
 
 **Create**: `src/app/api/users/route.ts`
+
 ```typescript
 import { NextRequest, NextResponse } from 'next/server';
 // Move your /backend/api/users.ts logic here
 ```
 
 **Advantages**:
+
 - Single deployment
 - Automatic API routing
 - Same port for frontend + backend
@@ -72,7 +74,9 @@ Keep them separate but deploy each independently:
 **Backend**: Deploy to Render as separate service
 
 **Steps**:
+
 1. Create separate `backend/package.json`:
+
 ```json
 {
   "name": "trading-bot-backend",
@@ -86,11 +90,13 @@ Keep them separate but deploy each independently:
 
 2. Create `Render.yaml` or manual Render service for backend
 3. Update frontend `.env` to point to backend URL:
+
 ```
 NEXT_PUBLIC_API_URL=https://your-backend.onrender.com
 ```
 
 **Advantages**:
+
 - Scalable
 - Independent deployments
 - Better for production
@@ -105,15 +111,18 @@ NEXT_PUBLIC_API_URL=https://your-backend.onrender.com
 Keep backend but wrap it with Next.js API routes as a temporary solution:
 
 **Create**: `src/app/api/[...proxy]/route.ts`
+
 ```typescript
 // This proxies all /api requests to your Express backend
 ```
 
 **Advantages**:
+
 - Quick temporary solution
 - Uses existing backend code
 
 **Disadvantages**:
+
 - Still needs separate backend process
 - Doesn't solve the deployment issue
 
@@ -158,6 +167,7 @@ BINANCE_SECRET_KEY=your_binance_secret
 ### For .env Files:
 
 1. **Frontend (Next.js) - needs**:
+
    ```env
    NEXT_PUBLIC_API_URL=http://localhost:3001  # or your backend URL
    NEXT_PUBLIC_FRONTEND_URL=https://oct-trading.netlify.app/
@@ -182,6 +192,7 @@ BINANCE_SECRET_KEY=your_binance_secret
 ## Recommendation
 
 **Start with Option 1**: Migrate key API endpoints to Next.js API routes. This is:
+
 - ✅ Easiest to deploy
 - ✅ Best for Render single-tier deployment
 - ✅ Faster development

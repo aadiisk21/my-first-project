@@ -121,7 +121,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to register user',
+        error:
+          error instanceof Error ? error.message : 'Failed to register user',
       },
       { status: 500 }
     );
