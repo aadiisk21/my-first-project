@@ -7,6 +7,27 @@ import { cacheService } from '../database/redis';
 
 const router = express.Router();
 
+// Type for cached user session
+interface CachedUserSession {
+  userId: string;
+  username: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  token?: string;
+  preferences?: {
+    theme?: string;
+    timezone?: string;
+    currency?: string;
+    language?: string;
+    defaultTimeframe?: string;
+    chartSettings?: unknown;
+    alertSettings?: unknown;
+  };
+}
+
 // Register new user
 router.post('/register', async (req, res) => {
   try {
@@ -265,7 +286,8 @@ router.put('/preferences', async (req, res) => {
     // Update cached session
     const cachedUser = await cacheService.getUserSession(decoded.userId);
     if (cachedUser) {
-      cachedUser.preferences = {
+      const typedCachedUser = cachedUser as CachedUserSession;
+      typedCachedUser.preferences = {
         theme,
         timezone,
         currency,
@@ -274,7 +296,7 @@ router.put('/preferences', async (req, res) => {
         chartSettings,
         alertSettings
       };
-      await cacheService.setUserSession(decoded.userId, cachedUser);
+      await cacheService.setUserSession(decoded.userId, typedCachedUser);
     }
 
     res.json({
