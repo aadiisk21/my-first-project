@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React, { useEffect, useRef, useState } from "react";
-import { MarketData, TechnicalIndicators } from "@/types";
-import { useTradingStore } from "@/stores/useTradingStore";
+import React, { useEffect, useRef, useState } from 'react';
+import { MarketData, TechnicalIndicators } from '@/types';
+import { useTradingStore } from '@/stores/useTradingStore';
 
 interface TradingChartProps {
   symbol: string;
@@ -15,11 +15,11 @@ interface TradingChartProps {
 
 export function TradingChart({
   symbol,
-  timeframe = "1h",
-  height = "400px",
+  timeframe = '1h',
+  height = '400px',
   showVolume = true,
   showIndicators = true,
-  className = ""
+  className = '',
 }: TradingChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -28,7 +28,9 @@ export function TradingChart({
 
   // Avoid returning new empty arrays from the selector (causes unstable snapshots)
   const marketData = useTradingStore((state) => state.marketData[symbol]);
-  const technicalIndicators = useTradingStore((state) => state.technicalIndicators[symbol]);
+  const technicalIndicators = useTradingStore(
+    (state) => state.technicalIndicators[symbol]
+  );
   const currentPrice = useTradingStore((state) => state.currentPrices[symbol]);
   const data = marketData ?? [];
 
@@ -38,14 +40,14 @@ export function TradingChart({
       if (containerRef.current) {
         setChartSize({
           width: containerRef.current.offsetWidth,
-          height: containerRef.current.offsetHeight
+          height: containerRef.current.offsetHeight,
         });
       }
     };
 
     handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // Custom chart drawing logic
@@ -54,7 +56,7 @@ export function TradingChart({
     const data = marketData ?? [];
     if (!canvas || data.length === 0) return;
 
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     const { width, height } = chartSize;
@@ -63,7 +65,9 @@ export function TradingChart({
     ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
     // Clear canvas
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--background');
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(
+      '--background'
+    );
     ctx.fillRect(0, 0, width, height);
 
     // Calculate chart dimensions
@@ -74,13 +78,15 @@ export function TradingChart({
     if (data.length === 0) return;
 
     // Calculate price range
-    const prices = data.flatMap(d => [d.high, d.low]);
+    const prices = data.flatMap((d) => [d.high, d.low]);
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
     const priceRange = maxPrice - minPrice;
 
     // Draw grid lines
-    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border');
+    ctx.strokeStyle = getComputedStyle(
+      document.documentElement
+    ).getPropertyValue('--border');
     ctx.lineWidth = 0.5;
     ctx.setLineDash([2, 2]);
 
@@ -93,9 +99,11 @@ export function TradingChart({
 
       // Price labels
       const price = maxPrice - (priceRange / 5) * i;
-      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--muted-foreground');
-      ctx.font = "11px sans-serif";
-      ctx.textAlign = "right";
+      ctx.fillStyle = getComputedStyle(
+        document.documentElement
+      ).getPropertyValue('--muted-foreground');
+      ctx.font = '11px sans-serif';
+      ctx.textAlign = 'right';
       ctx.fillText(price.toFixed(4), width - padding.right + 5, y + 3);
     }
     ctx.setLineDash([]);
@@ -106,10 +114,14 @@ export function TradingChart({
 
     data.forEach((candle, index) => {
       const x = padding.left + index * candleSpacing + candleSpacing / 2;
-      const yHigh = padding.top + ((maxPrice - candle.high) / priceRange) * chartHeight;
-      const yLow = padding.top + ((maxPrice - candle.low) / priceRange) * chartHeight;
-      const yOpen = padding.top + ((maxPrice - candle.open) / priceRange) * chartHeight;
-      const yClose = padding.top + ((maxPrice - candle.close) / priceRange) * chartHeight;
+      const yHigh =
+        padding.top + ((maxPrice - candle.high) / priceRange) * chartHeight;
+      const yLow =
+        padding.top + ((maxPrice - candle.low) / priceRange) * chartHeight;
+      const yOpen =
+        padding.top + ((maxPrice - candle.open) / priceRange) * chartHeight;
+      const yClose =
+        padding.top + ((maxPrice - candle.close) / priceRange) * chartHeight;
 
       const isGreen = candle.close >= candle.open;
       const color = isGreen
@@ -118,8 +130,13 @@ export function TradingChart({
 
       // Highlight hovered candle
       if (hoveredCandle === index) {
-        ctx.fillStyle = color + "20";
-        ctx.fillRect(x - candleSpacing / 2, padding.top, candleSpacing, chartHeight);
+        ctx.fillStyle = color + '20';
+        ctx.fillRect(
+          x - candleSpacing / 2,
+          padding.top,
+          candleSpacing,
+          chartHeight
+        );
       }
 
       // Draw wick
@@ -144,11 +161,11 @@ export function TradingChart({
 
       // Draw volume if enabled
       if (showVolume) {
-        const maxVolume = Math.max(...data.map(d => d.volume));
+        const maxVolume = Math.max(...data.map((d) => d.volume));
         const volumeHeight = (candle.volume / maxVolume) * (chartHeight * 0.2);
         const volumeY = height - padding.bottom - volumeHeight;
 
-        ctx.fillStyle = isGreen ? color + "60" : color + "40";
+        ctx.fillStyle = isGreen ? color + '60' : color + '40';
         ctx.fillRect(x - candleWidth / 2, volumeY, candleWidth, volumeHeight);
       }
 
@@ -156,10 +173,15 @@ export function TradingChart({
       if (showIndicators && technicalIndicators) {
         // Draw SMA
         if (technicalIndicators.sma && technicalIndicators.sma[index]) {
-          ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--chart-2');
+          ctx.strokeStyle = getComputedStyle(
+            document.documentElement
+          ).getPropertyValue('--chart-2');
           ctx.lineWidth = 2;
           ctx.beginPath();
-          const smaY = padding.top + ((maxPrice - technicalIndicators.sma[index]) / priceRange) * chartHeight;
+          const smaY =
+            padding.top +
+            ((maxPrice - technicalIndicators.sma[index]) / priceRange) *
+              chartHeight;
           if (index === 0) {
             ctx.moveTo(x, smaY);
           } else {
@@ -172,13 +194,17 @@ export function TradingChart({
         if (technicalIndicators.bollingerBands) {
           const { upper, lower } = technicalIndicators.bollingerBands;
           if (upper[index] && lower[index]) {
-            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--chart-3');
+            ctx.strokeStyle = getComputedStyle(
+              document.documentElement
+            ).getPropertyValue('--chart-3');
             ctx.lineWidth = 1;
             ctx.setLineDash([5, 3]);
 
             // Upper band
             ctx.beginPath();
-            const upperY = padding.top + ((maxPrice - upper[index]) / priceRange) * chartHeight;
+            const upperY =
+              padding.top +
+              ((maxPrice - upper[index]) / priceRange) * chartHeight;
             if (index === 0) {
               ctx.moveTo(x, upperY);
             } else {
@@ -188,7 +214,9 @@ export function TradingChart({
 
             // Lower band
             ctx.beginPath();
-            const lowerY = padding.top + ((maxPrice - lower[index]) / priceRange) * chartHeight;
+            const lowerY =
+              padding.top +
+              ((maxPrice - lower[index]) / priceRange) * chartHeight;
             if (index === 0) {
               ctx.moveTo(x, lowerY);
             } else {
@@ -204,8 +232,11 @@ export function TradingChart({
 
     // Draw current price line
     if (currentPrice) {
-      const currentY = padding.top + ((maxPrice - currentPrice) / priceRange) * chartHeight;
-      ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary');
+      const currentY =
+        padding.top + ((maxPrice - currentPrice) / priceRange) * chartHeight;
+      ctx.strokeStyle = getComputedStyle(
+        document.documentElement
+      ).getPropertyValue('--primary');
       ctx.lineWidth = 2;
       ctx.setLineDash([5, 3]);
       ctx.beginPath();
@@ -215,23 +246,36 @@ export function TradingChart({
       ctx.setLineDash([]);
 
       // Current price label
-      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary');
+      ctx.fillStyle = getComputedStyle(
+        document.documentElement
+      ).getPropertyValue('--primary');
       ctx.fillRect(width - padding.right - 50, currentY - 10, 50, 20);
-      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary-foreground');
-      ctx.font = "bold 11px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText(currentPrice.toFixed(4), width - padding.right - 25, currentY + 3);
+      ctx.fillStyle = getComputedStyle(
+        document.documentElement
+      ).getPropertyValue('--primary-foreground');
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(
+        currentPrice.toFixed(4),
+        width - padding.right - 25,
+        currentY + 3
+      );
     }
 
     // Draw tooltip on hover
     if (hoveredCandle !== null && hoveredCandle < data.length) {
       const candle = data[hoveredCandle];
-      const tooltipX = padding.left + hoveredCandle * candleSpacing + candleSpacing / 2;
+      const tooltipX =
+        padding.left + hoveredCandle * candleSpacing + candleSpacing / 2;
       const tooltipY = padding.top + 20;
 
       // Tooltip background
-      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--popover');
-      ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--border');
+      ctx.fillStyle = getComputedStyle(
+        document.documentElement
+      ).getPropertyValue('--popover');
+      ctx.strokeStyle = getComputedStyle(
+        document.documentElement
+      ).getPropertyValue('--border');
       ctx.lineWidth = 1;
 
       const tooltipText = [
@@ -239,27 +283,48 @@ export function TradingChart({
         `H: ${candle.high.toFixed(4)}`,
         `L: ${candle.low.toFixed(4)}`,
         `C: ${candle.close.toFixed(4)}`,
-        `V: ${candle.volume.toLocaleString()}`
+        `V: ${candle.volume.toLocaleString()}`,
       ];
 
-      ctx.font = "11px monospace";
-      const textWidth = Math.max(...tooltipText.map(t => ctx.measureText(t).width));
+      ctx.font = '11px monospace';
+      const textWidth = Math.max(
+        ...tooltipText.map((t) => ctx.measureText(t).width)
+      );
       const tooltipHeight = tooltipText.length * 15 + 10;
 
       ctx.beginPath();
-      ctx.roundRect(tooltipX - textWidth / 2 - 5, tooltipY, textWidth + 10, tooltipHeight, 4);
+      ctx.roundRect(
+        tooltipX - textWidth / 2 - 5,
+        tooltipY,
+        textWidth + 10,
+        tooltipHeight,
+        4
+      );
       ctx.fill();
       ctx.stroke();
 
       // Tooltip text
-      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--popover-foreground');
-      ctx.textAlign = "left";
+      ctx.fillStyle = getComputedStyle(
+        document.documentElement
+      ).getPropertyValue('--popover-foreground');
+      ctx.textAlign = 'left';
       tooltipText.forEach((text, index) => {
-        ctx.fillText(text, tooltipX - textWidth / 2, tooltipY + 15 + index * 15);
+        ctx.fillText(
+          text,
+          tooltipX - textWidth / 2,
+          tooltipY + 15 + index * 15
+        );
       });
     }
-
-  }, [marketData, technicalIndicators, currentPrice, chartSize, hoveredCandle, showVolume, showIndicators]);
+  }, [
+    marketData,
+    technicalIndicators,
+    currentPrice,
+    chartSize,
+    hoveredCandle,
+    showVolume,
+    showIndicators,
+  ]);
 
   // Mouse move handler
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -288,43 +353,45 @@ export function TradingChart({
       className={`chart-container ${className}`}
       style={{ height }}
     >
-      <div className="absolute top-2 left-2 z-10 flex items-center space-x-2">
-        <div className="text-sm font-medium text-foreground">{symbol}</div>
-        <div className="text-xs text-muted-foreground">{timeframe}</div>
+      <div className='absolute top-2 left-2 z-10 flex items-center space-x-2'>
+        <div className='text-sm font-medium text-foreground'>{symbol}</div>
+        <div className='text-xs text-muted-foreground'>{timeframe}</div>
         {currentPrice && (
-          <div className={`text-sm font-mono ${
-            data.length > 0 && currentPrice >= data[data.length - 1].close
-              ? 'text-buy'
-              : 'text-sell'
-          }`}>
+          <div
+            className={`text-sm font-mono ${
+              data.length > 0 && currentPrice >= data[data.length - 1].close
+                ? 'text-buy'
+                : 'text-sell'
+            }`}
+          >
             {currentPrice.toFixed(4)}
           </div>
         )}
       </div>
 
-      <div className="absolute top-2 right-2 z-10 flex items-center space-x-2">
-        <div className="flex items-center space-x-1 text-xs">
-          <div className="w-3 h-3 bg-buy rounded"></div>
-          <span className="text-muted-foreground">Buy</span>
+      <div className='absolute top-2 right-2 z-10 flex items-center space-x-2'>
+        <div className='flex items-center space-x-1 text-xs'>
+          <div className='w-3 h-3 bg-buy rounded'></div>
+          <span className='text-muted-foreground'>Buy</span>
         </div>
-        <div className="flex items-center space-x-1 text-xs">
-          <div className="w-3 h-3 bg-sell rounded"></div>
-          <span className="text-muted-foreground">Sell</span>
+        <div className='flex items-center space-x-1 text-xs'>
+          <div className='w-3 h-3 bg-sell rounded'></div>
+          <span className='text-muted-foreground'>Sell</span>
         </div>
       </div>
 
       {showIndicators && technicalIndicators && (
-        <div className="absolute bottom-2 left-2 z-10 flex flex-wrap gap-2">
+        <div className='absolute bottom-2 left-2 z-10 flex flex-wrap gap-2'>
           {technicalIndicators.sma && (
-            <div className="flex items-center space-x-1 text-xs">
-              <div className="w-3 h-0.5 bg-chart-2"></div>
-              <span className="text-muted-foreground">SMA</span>
+            <div className='flex items-center space-x-1 text-xs'>
+              <div className='w-3 h-0.5 bg-chart-2'></div>
+              <span className='text-muted-foreground'>SMA</span>
             </div>
           )}
           {technicalIndicators.bollingerBands && (
-            <div className="flex items-center space-x-1 text-xs">
-              <div className="w-3 h-0.5 bg-chart-3 border-dashed border-chart-3"></div>
-              <span className="text-muted-foreground">BB</span>
+            <div className='flex items-center space-x-1 text-xs'>
+              <div className='w-3 h-0.5 bg-chart-3 border-dashed border-chart-3'></div>
+              <span className='text-muted-foreground'>BB</span>
             </div>
           )}
         </div>
@@ -332,16 +399,16 @@ export function TradingChart({
 
       <canvas
         ref={canvasRef}
-        className="w-full h-full cursor-crosshair"
+        className='w-full h-full cursor-crosshair'
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       />
 
       {data.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-          <div className="text-center">
-            <div className="text-lg font-medium mb-2">No Data Available</div>
-            <div className="text-sm">Waiting for market data...</div>
+        <div className='absolute inset-0 flex items-center justify-center text-muted-foreground'>
+          <div className='text-center'>
+            <div className='text-lg font-medium mb-2'>No Data Available</div>
+            <div className='text-sm'>Waiting for market data...</div>
           </div>
         </div>
       )}

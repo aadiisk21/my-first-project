@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   // Use JS/CSS compilation fallback and avoid SWC native/minify issues in dev
