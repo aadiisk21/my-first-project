@@ -1,6 +1,7 @@
 # Environment Setup Guide
 
 ## Overview
+
 This project uses environment variables to configure backend services, APIs, and database connections. The configuration is split into three files:
 
 - `.env` - Local development configuration (already present)
@@ -44,6 +45,7 @@ BINANCE_SECRET_KEY=your_binance_secret (for Binance trading)
 Before running the backend, ensure these services are running:
 
 #### PostgreSQL Database
+
 ```bash
 # On Windows with WSL2/Docker:
 docker run -d \
@@ -58,6 +60,7 @@ docker run -d \
 ```
 
 #### Redis Cache
+
 ```bash
 # On Windows with Docker:
 docker run -d \
@@ -82,12 +85,14 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ### 4. Setup Trading API Keys
 
 #### Binance (Required for Market Data)
+
 1. Go to https://www.binance.com/en/account/login
 2. Navigate to API Management
 3. Create a new API key
 4. Copy `API Key` and `API Secret` to your `.env` file
 
 #### TradingView (Optional)
+
 1. Get an API key from TradingView if using their feeds
 2. Add to `.env` as `TRADINGVIEW_API_KEY`
 
@@ -118,12 +123,14 @@ ENABLE_EMAIL_NOTIFICATIONS=false # Send email alerts
 ## Environment Variables Reference
 
 ### Core
+
 - `NODE_ENV`: `development` or `production`
 - `PORT`: Backend server port (default: 3001)
 - `FRONTEND_URL`: Frontend application URL
 
 ### Database
-- `DATABASE_URL`: Full PostgreSQL connection string (optional, builds from DB_*)
+
+- `DATABASE_URL`: Full PostgreSQL connection string (optional, builds from DB\_\*)
 - `DB_HOST`: PostgreSQL host
 - `DB_PORT`: PostgreSQL port
 - `DB_NAME`: Database name
@@ -131,6 +138,7 @@ ENABLE_EMAIL_NOTIFICATIONS=false # Send email alerts
 - `DB_PASSWORD`: Database password
 
 ### Redis
+
 - `REDIS_HOST`: Redis server host
 - `REDIS_PORT`: Redis server port
 - `REDIS_PASSWORD`: Redis password (leave empty if none)
@@ -138,21 +146,25 @@ ENABLE_EMAIL_NOTIFICATIONS=false # Send email alerts
 - `REDIS_KEY_PREFIX`: Key prefix for all Redis keys
 
 ### Authentication
+
 - `JWT_SECRET`: Secret key for JWT tokens (min 32 chars in production)
 - `JWT_EXPIRY`: Token expiration time (default: 7d)
 - `REFRESH_TOKEN_SECRET`: Secret for refresh tokens
 
 ### Trading APIs
+
 - `BINANCE_API_KEY`: Binance API key
 - `BINANCE_SECRET_KEY`: Binance API secret
 - `TRADINGVIEW_API_KEY`: TradingView API key
 
 ### Logging
+
 - `LOG_LEVEL`: `debug`, `info`, `warn`, `error`
 - `ENABLE_FILE_LOGGING`: Write logs to file
 - `LOG_DIR`: Directory for log files
 
 ### ML/Data
+
 - `ML_MODEL_PATH`: Path to trained ML models
 - `DATA_PROCESSOR_PATH`: Path to data processor script
 
@@ -179,20 +191,24 @@ For production, use `.env.local` as a template:
 ## Troubleshooting
 
 ### "Connection refused" errors
+
 - Verify PostgreSQL is running on `DB_HOST:DB_PORT`
 - Verify Redis is running on `REDIS_HOST:REDIS_PORT`
 - Check credentials in `.env` match your services
 
 ### "Invalid JWT" errors
+
 - Regenerate JWT_SECRET if changed
 - Existing tokens will be invalidated
 
 ### "API key invalid" errors
+
 - Verify Binance API keys are correct and active
 - Check IP whitelist in Binance dashboard (if enabled)
 - Ensure API key has appropriate permissions
 
 ### Redis connection timeout
+
 - Check REDIS_HOST and REDIS_PORT
 - Verify REDIS_PASSWORD is correct (empty string if none)
 - Ensure Redis service is running and accessible

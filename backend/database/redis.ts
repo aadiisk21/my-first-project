@@ -181,7 +181,10 @@ export class CacheService {
     await this.set(key, data, ttlSeconds);
   }
 
-  async getMarketData(symbol: string, timeframe: string): Promise<unknown[] | null> {
+  async getMarketData(
+    symbol: string,
+    timeframe: string
+  ): Promise<unknown[] | null> {
     const key = `market_data:${symbol}:${timeframe}`;
     return this.get<unknown[]>(key);
   }
@@ -201,7 +204,11 @@ export class CacheService {
   }
 
   // User session caching
-  async setUserSession(userId: string, sessionData: unknown, ttlSeconds: number = 86400): Promise<void> {
+  async setUserSession(
+    userId: string,
+    sessionData: unknown,
+    ttlSeconds: number = 86400
+  ): Promise<void> {
     const key = `session:${userId}`;
     await this.set(key, sessionData, ttlSeconds);
   }
@@ -235,7 +242,7 @@ export class CacheService {
       return {
         allowed: false,
         remaining: 0,
-        resetTime: parseInt(resetTime) + windowSeconds
+        resetTime: parseInt(resetTime) + windowSeconds,
       };
     }
 
@@ -245,18 +252,24 @@ export class CacheService {
     return {
       allowed: true,
       remaining: maxRequests - current - 1,
-      resetTime: now + windowSeconds
+      resetTime: now + windowSeconds,
     };
   }
 
   // WebSocket connection management
-  async addWebSocketConnection(userId: string, socketId: string): Promise<void> {
+  async addWebSocketConnection(
+    userId: string,
+    socketId: string
+  ): Promise<void> {
     const key = `websocket:${userId}`;
     await this.client.sAdd(key, socketId);
     await this.client.expire(key, 3600);
   }
 
-  async removeWebSocketConnection(userId: string, socketId: string): Promise<void> {
+  async removeWebSocketConnection(
+    userId: string,
+    socketId: string
+  ): Promise<void> {
     const key = `websocket:${userId}`;
     await this.client.sRem(key, socketId);
   }
