@@ -120,7 +120,7 @@
   .trading-card {
     border-radius: 0.5rem;
     border: 1px solid rgb(var(--border));
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     background-color: rgb(var(--background));
     color: rgb(var(--foreground));
   }
