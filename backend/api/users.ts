@@ -260,6 +260,41 @@ router.get('/profile', async (req, res) => {
   }
 });
 
+// Get user portfolio (mock implementation)
+router.get('/portfolio', async (req, res) => {
+  try {
+    // For now return a simple mock portfolio. In future, retrieve from DB
+    const assets = [
+      {
+        symbol: 'BTC',
+        amount: 0.5,
+        currentPrice: 51200,
+        value: 25600,
+        change24h: 1200,
+        changePercent24h: 2.4,
+        entryPrice: 48000,
+        unrealizedPnL: 1600,
+        unrealizedPnLPercent: 6.7
+      },
+      {
+        symbol: 'ETH',
+        amount: 5,
+        currentPrice: 2850,
+        value: 14250,
+        change24h: 200,
+        changePercent24h: 1.4,
+        entryPrice: 2700,
+        unrealizedPnL: 750,
+        unrealizedPnLPercent: 5.6
+      }
+    ];
+
+    res.json({ success: true, data: { assets, count: assets.length, timestamp: new Date().toISOString() } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to fetch portfolio' });
+  }
+});
+
 // Update user preferences
 router.put('/preferences', async (req, res) => {
   try {
