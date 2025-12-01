@@ -45,18 +45,17 @@ export const wsRateLimiter = rateLimit({
     success: false,
     error: 'Too many WebSocket connections, please try again later'
   },
-  keyGenerator: (req: Request): string => {
-    return req.ip ?? 'unknown';
-  }
+  // Use default key generation (by IP). Custom keyGenerators that reference
+  // req.ip are rejected by newer express-rate-limit versions unless using
+  // the provided ipKeyGenerator helper. For dev, rely on the default.
 });
 
 // Trading signal rate limiting (per user)
 export const signalRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 10,
-  keyGenerator: (req: Request): string => {
-    return (req.headers['x-user-id'] as string) ?? req.ip ?? 'anonymous';
-  },
+  // Keep default key generator. If per-user rate limiting is needed later,
+  // replace with a compliant keyGenerator using ipKeyGenerator or similar.
   message: {
     success: false,
     error: 'Too many signal requests, please wait before requesting more',

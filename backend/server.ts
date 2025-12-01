@@ -6,14 +6,14 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
 
-import tradingRoutes from './api/trading';
-import signalRoutes from './api/signals';
-import userRoutes from './api/users';
-import { setupWebSocketHandlers } from './websocket/handler';
-import { errorHandler } from './middleware/errorHandler';
-import { rateLimiter } from './middleware/rateLimiter';
-import { connectDatabase } from './database/connection';
-import { connectRedis } from './database/redis';
+import tradingRoutes from './api/trading.js';
+import signalRoutes from './api/signals.js';
+import userRoutes from './api/users.js';
+import { setupWebSocketHandlers } from './websocket/handler.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import { rateLimiter } from './middleware/rateLimiter.js';
+import { connectDatabase } from './database/connection.js';
+import { connectRedis } from './database/redis.js';
 
 dotenv.config();
 
@@ -78,7 +78,8 @@ setupWebSocketHandlers(io);
 app.use(errorHandler);
 
 // 404 handler
-app.use('*', (req, res) => {
+// 404 handler (no path so it always matches when reached)
+app.use((req, res) => {
   res.status(404).json({
     success: false,
     error: 'Route not found',
@@ -91,13 +92,21 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 
 async function startServer() {
   try {
-    // Connect to database
-    await connectDatabase();
-    console.log('✅ Database connected successfully');
+    // Connect to database (non-fatal in development)
+    try {
+      await connectDatabase();
+      console.log('✅ Database connected successfully');
+    } catch (dbErr) {
+      console.warn('⚠️ Database connection failed — continuing in degraded mode:', dbErr?.message || dbErr);
+    }
 
-    // Connect to Redis
-    await connectRedis();
-    console.log('✅ Redis connected successfully');
+    // Connect to Redis (non-fatal in development)
+    try {
+      await connectRedis();
+      console.log('✅ Redis connected successfully');
+    } catch (redisErr) {
+      console.warn('⚠️ Redis connection failed — continuing in degraded mode:', redisErr?.message || redisErr);
+    }
 
     // Start server
     server.listen(PORT, () => {

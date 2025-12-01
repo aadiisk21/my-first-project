@@ -80,7 +80,12 @@ export class CacheService {
   private client: RedisClientType;
 
   constructor() {
-    this.client = getRedis();
+    // Avoid calling getRedis() during module import (it may not be connected yet).
+    this.client = undefined as unknown as RedisClientType;
+  }
+
+  private getClient(): RedisClientType {
+    return this.client ?? getRedis();
   }
 
   async set(
@@ -90,7 +95,7 @@ export class CacheService {
   ): Promise<void> {
     try {
       const serializedValue = JSON.stringify(value);
-      await this.client.setEx(key, expireInSeconds, serializedValue);
+      await this.getClient().setEx(key, expireInSeconds, serializedValue);
     } catch (error) {
       logger.error(`Cache set error for key ${key}:`, error);
       throw error;
@@ -99,9 +104,9 @@ export class CacheService {
 
   async get<T = unknown>(key: string): Promise<T | null> {
     try {
-      const value = await this.client.get(key);
+      const value = await this.getClient().get(key);
       if (value === null) return null;
-      return JSON.parse(value) as T;
+      return JSON.parse(value as string) as T;
     } catch (error) {
       logger.error(`Cache get error for key ${key}:`, error);
       return null;
@@ -110,7 +115,7 @@ export class CacheService {
 
   async del(key: string): Promise<boolean> {
     try {
-      const result = await this.client.del(key);
+      const result = await this.getClient().del(key);
       return result > 0;
     } catch (error) {
       logger.error(`Cache delete error for key ${key}:`, error);
@@ -120,7 +125,7 @@ export class CacheService {
 
   async exists(key: string): Promise<boolean> {
     try {
-      const result = await this.client.exists(key);
+      const result = await this.getClient().exists(key);
       return result === 1;
     } catch (error) {
       logger.error(`Cache exists error for key ${key}:`, error);
@@ -135,7 +140,7 @@ export class CacheService {
   ): Promise<void> {
     try {
       const serializedValue = JSON.stringify(value);
-      await this.client.setEx(key, ttlSeconds, serializedValue);
+      await this.getClient().setEx(key, ttlSeconds, serializedValue);
     } catch (error) {
       logger.error(`Cache set with TTL error for key ${key}:`, error);
       throw error;
@@ -144,7 +149,7 @@ export class CacheService {
 
   async increment(key: string, amount: number = 1): Promise<number> {
     try {
-      return await this.client.incrBy(key, amount);
+      return await this.getClient().incrBy(key, amount);
     } catch (error) {
       logger.error(`Cache increment error for key ${key}:`, error);
       throw error;
@@ -153,7 +158,7 @@ export class CacheService {
 
   async expire(key: string, ttlSeconds: number): Promise<boolean> {
     try {
-      const result = await this.client.expire(key, ttlSeconds);
+      const result = await this.getClient().expire(key, ttlSeconds);
       return result === 1;
     } catch (error) {
       logger.error(`Cache expire error for key ${key}:`, error);
@@ -163,7 +168,7 @@ export class CacheService {
 
   async getTTL(key: string): Promise<number> {
     try {
-      return await this.client.ttl(key);
+      return await this.getClient().ttl(key);
     } catch (error) {
       logger.error(`Cache TTL error for key ${key}:`, error);
       return -1;
@@ -233,12 +238,12 @@ export class CacheService {
     const now = Math.floor(Date.now() / 1000);
     const windowStart = now - windowSeconds;
 
-    await this.client.zRemRangeByScore(key, 0, windowStart);
+    await this.getClient().zRemRangeByScore(key, 0, windowStart);
 
-    const current = await this.client.zCard(key);
+    const current = await this.getClient().zCard(key);
 
     if (current >= maxRequests) {
-      const resetTime = (await this.client.zRange(key, 0, 0, { REV: true }))[0];
+      const resetTime = (await this.getClient().zRange(key, 0, 0, { REV: true }))[0];
       return {
         allowed: false,
         remaining: 0,
@@ -246,8 +251,8 @@ export class CacheService {
       };
     }
 
-    await this.client.zAdd(key, [{ score: now, value: now.toString() }]);
-    await this.client.expire(key, windowSeconds);
+    await this.getClient().zAdd(key, [{ score: now, value: now.toString() }]);
+    await this.getClient().expire(key, windowSeconds);
 
     return {
       allowed: true,
@@ -262,8 +267,8 @@ export class CacheService {
     socketId: string
   ): Promise<void> {
     const key = `websocket:${userId}`;
-    await this.client.sAdd(key, socketId);
-    await this.client.expire(key, 3600);
+    await this.getClient().sAdd(key, socketId);
+    await this.getClient().expire(key, 3600);
   }
 
   async removeWebSocketConnection(
@@ -271,12 +276,12 @@ export class CacheService {
     socketId: string
   ): Promise<void> {
     const key = `websocket:${userId}`;
-    await this.client.sRem(key, socketId);
+    await this.getClient().sRem(key, socketId);
   }
 
   async getWebSocketConnections(userId: string): Promise<string[]> {
     const key = `websocket:${userId}`;
-    return this.client.sMembers(key);
+    return this.getClient().sMembers(key);
   }
 }
 

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "backend:dev": "node -r ts-node/register/transpile-only backend/server.ts",
+    "backend:dev": "ts-node-esm backend/server.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -37,6 +37,9 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
+    "@types/morgan": "^1.9.10",
     "@types/react": "19.2.7",
     "ts-node": "^10.9.1"
   },
