@@ -29,17 +29,23 @@ export class BinanceService {
             symbol: crypto.symbol,
             baseAsset: crypto.baseAsset,
             quoteAsset: crypto.quoteAsset,
-            ...priceData,
+            currentPrice: priceData.price,
+            priceChange: priceData.change,
+            priceChangePercent: priceData.changePercent,
+            volume: priceData.volume,
+            lastUpdate: new Date(),
           };
         } catch (error) {
           console.warn(`Failed to fetch price for ${crypto.symbol}`, error);
           return {
             symbol: crypto.symbol,
-            ...crypto,
-            price: 0,
-            change: 0,
-            changePercent: 0,
+            baseAsset: crypto.baseAsset,
+            quoteAsset: crypto.quoteAsset,
+            currentPrice: 0,
+            priceChange: 0,
+            priceChangePercent: 0,
             volume: 0,
+            lastUpdate: new Date(),
           };
         }
       });
@@ -71,10 +77,28 @@ export class BinanceService {
       const pricePromises = symbols.map(async (sym: any) => {
         try {
           const priceData = await this.getCurrentPrice(sym.symbol);
-          return { ...sym, ...priceData };
+          return {
+            symbol: sym.symbol,
+            baseAsset: sym.baseAsset,
+            quoteAsset: sym.quoteAsset,
+            currentPrice: priceData.price,
+            priceChange: priceData.change,
+            priceChangePercent: priceData.changePercent,
+            volume: priceData.volume,
+            lastUpdate: new Date(),
+          };
         } catch (error) {
           console.warn(`Failed to fetch price for ${sym.symbol}`, error);
-          return sym;
+          return {
+            symbol: sym.symbol,
+            baseAsset: sym.baseAsset,
+            quoteAsset: sym.quoteAsset,
+            currentPrice: 0,
+            priceChange: 0,
+            priceChangePercent: 0,
+            volume: 0,
+            lastUpdate: new Date(),
+          };
         }
       });
 
@@ -248,8 +272,8 @@ export class BinanceService {
         : await this.getCommodityPairs();
 
     return pairs
-      .filter((pair) => pair.changePercent > 0)
-      .sort((a, b) => b.changePercent - a.changePercent)
+      .filter((pair) => pair.priceChangePercent > 0)
+      .sort((a, b) => b.priceChangePercent - a.priceChangePercent)
       .slice(0, limit);
   }
 
@@ -263,8 +287,8 @@ export class BinanceService {
         : await this.getCommodityPairs();
 
     return pairs
-      .filter((pair) => pair.changePercent < 0)
-      .sort((a, b) => a.changePercent - b.changePercent)
+      .filter((pair) => pair.priceChangePercent < 0)
+      .sort((a, b) => a.priceChangePercent - b.priceChangePercent)
       .slice(0, limit);
   }
 
