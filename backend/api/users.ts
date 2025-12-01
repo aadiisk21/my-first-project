@@ -274,7 +274,7 @@ router.get('/portfolio', async (req, res) => {
         changePercent24h: 2.4,
         entryPrice: 48000,
         unrealizedPnL: 1600,
-        unrealizedPnLPercent: 6.7
+        unrealizedPnLPercent: 6.7,
       },
       {
         symbol: 'ETH',
@@ -285,13 +285,26 @@ router.get('/portfolio', async (req, res) => {
         changePercent24h: 1.4,
         entryPrice: 2700,
         unrealizedPnL: 750,
-        unrealizedPnLPercent: 5.6
-      }
+        unrealizedPnLPercent: 5.6,
+      },
     ];
 
-    res.json({ success: true, data: { assets, count: assets.length, timestamp: new Date().toISOString() } });
+    res.json({
+      success: true,
+      data: {
+        assets,
+        count: assets.length,
+        timestamp: new Date().toISOString(),
+      },
+    });
   } catch (error) {
-    res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Failed to fetch portfolio' });
+    res
+      .status(500)
+      .json({
+        success: false,
+        error:
+          error instanceof Error ? error.message : 'Failed to fetch portfolio',
+      });
   }
 });
 

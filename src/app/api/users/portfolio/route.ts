@@ -27,5 +27,8 @@ export async function GET(request: Request) {
     },
   ];
 
-  return NextResponse.json({ success: true, data: { assets, count: assets.length, timestamp: new Date().toISOString() } });
+  return NextResponse.json({
+    success: true,
+    data: { assets, count: assets.length, timestamp: new Date().toISOString() },
+  });
 }
