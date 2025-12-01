@@ -12,7 +12,7 @@ exports.rateLimiter = (0, express_rate_limit_1.default)({
     message: {
         success: false,
         error: 'Too many requests from this IP, please try again later',
-        retryAfter: '15 minutes'
+        retryAfter: '15 minutes',
     },
     standardHeaders: true,
     legacyHeaders: false,
@@ -22,9 +22,9 @@ exports.rateLimiter = (0, express_rate_limit_1.default)({
             error: 'Too many requests from this IP, please try again later',
             retryAfter: '15 minutes',
             limit: 100,
-            windowMs: '15 minutes'
+            windowMs: '15 minutes',
         });
-    }
+    },
 });
 // Strict rate limiting for sensitive endpoints
 exports.strictRateLimiter = (0, express_rate_limit_1.default)({
@@ -33,11 +33,11 @@ exports.strictRateLimiter = (0, express_rate_limit_1.default)({
     message: {
         success: false,
         error: 'Too many requests to this endpoint, please try again later',
-        retryAfter: '15 minutes'
+        retryAfter: '15 minutes',
     },
     standardHeaders: true,
     legacyHeaders: false,
-    skipSuccessfulRequests: false
+    skipSuccessfulRequests: false,
 });
 // WebSocket connection rate limiting
 exports.wsRateLimiter = (0, express_rate_limit_1.default)({
@@ -45,7 +45,7 @@ exports.wsRateLimiter = (0, express_rate_limit_1.default)({
     max: 30,
     message: {
         success: false,
-        error: 'Too many WebSocket connections, please try again later'
+        error: 'Too many WebSocket connections, please try again later',
     },
     // Use default key generation (by IP). Custom keyGenerators that reference
     // req.ip are rejected by newer express-rate-limit versions unless using
@@ -60,7 +60,7 @@ exports.signalRateLimiter = (0, express_rate_limit_1.default)({
     message: {
         success: false,
         error: 'Too many signal requests, please wait before requesting more',
-        retryAfter: '1 minute'
-    }
+        retryAfter: '1 minute',
+    },
 });
 //# sourceMappingURL=rateLimiter.js.map

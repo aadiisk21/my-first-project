@@ -26,10 +26,10 @@ const server = (0, http_1.createServer)(app);
 // Socket.IO setup with CORS
 const io = new socket_io_1.Server(server, {
     cors: {
-        origin: process.env.FRONTEND_URL || "http://localhost:3000",
-        methods: ["GET", "POST"],
-        credentials: true
-    }
+        origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+        methods: ['GET', 'POST'],
+        credentials: true,
+    },
 });
 exports.io = io;
 // Middleware
@@ -39,16 +39,16 @@ app.use((0, helmet_1.default)({
             defaultSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
             scriptSrc: ["'self'"],
-            imgSrc: ["'self'", "data:", "https:"],
-            connectSrc: ["'self'", "wss:", "https:"],
+            imgSrc: ["'self'", 'data:', 'https:'],
+            connectSrc: ["'self'", 'wss:', 'https:'],
         },
     },
 }));
 app.use((0, cors_1.default)({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
 app.use((0, morgan_1.default)('combined'));
 app.use(express_1.default.json({ limit: '10mb' }));
@@ -61,7 +61,7 @@ app.get('/health', (req, res) => {
         status: 'healthy',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
-        environment: process.env.NODE_ENV || 'development'
+        environment: process.env.NODE_ENV || 'development',
     });
 });
 // API routes
@@ -78,7 +78,7 @@ app.use((req, res) => {
     res.status(404).json({
         success: false,
         error: 'Route not found',
-        message: `Cannot ${req.method} ${req.originalUrl}`
+        message: `Cannot ${req.method} ${req.originalUrl}`,
     });
 });
 const PORT = process.env.PORT || 3001;
@@ -105,7 +105,7 @@ async function startServer() {
         server.listen(PORT, () => {
             console.log(`🚀 Server running on port ${PORT} in ${NODE_ENV} mode`);
             console.log(`📡 WebSocket server ready for connections`);
-            console.log(`🌍 CORS enabled for: ${process.env.FRONTEND_URL || "http://localhost:3000"}`);
+            console.log(`🌍 CORS enabled for: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
         });
         // Graceful shutdown
         process.on('SIGTERM', gracefulShutdown);
