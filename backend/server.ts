@@ -101,9 +101,10 @@ async function startServer() {
       await connectDatabase();
       console.log('✅ Database connected successfully');
     } catch (dbErr) {
+      const dbError = dbErr instanceof Error ? dbErr.message : String(dbErr);
       console.warn(
         '⚠️ Database connection failed — continuing in degraded mode:',
-        dbErr?.message || dbErr
+        dbError
       );
     }
 
@@ -112,9 +113,10 @@ async function startServer() {
       await connectRedis();
       console.log('✅ Redis connected successfully');
     } catch (redisErr) {
+      const redisError = redisErr instanceof Error ? redisErr.message : String(redisErr);
       console.warn(
         '⚠️ Redis connection failed — continuing in degraded mode:',
-        redisErr?.message || redisErr
+        redisError
       );
     }
 
