@@ -113,7 +113,8 @@ async function startServer() {
       await connectRedis();
       console.log('✅ Redis connected successfully');
     } catch (redisErr) {
-      const redisError = redisErr instanceof Error ? redisErr.message : String(redisErr);
+      const redisError =
+        redisErr instanceof Error ? redisErr.message : String(redisErr);
       console.warn(
         '⚠️ Redis connection failed — continuing in degraded mode:',
         redisError
