@@ -8,7 +8,7 @@ export const rateLimiter = rateLimit({
   message: {
     success: false,
     error: 'Too many requests from this IP, please try again later',
-    retryAfter: '15 minutes'
+    retryAfter: '15 minutes',
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -18,9 +18,9 @@ export const rateLimiter = rateLimit({
       error: 'Too many requests from this IP, please try again later',
       retryAfter: '15 minutes',
       limit: 100,
-      windowMs: '15 minutes'
+      windowMs: '15 minutes',
     });
-  }
+  },
 });
 
 // Strict rate limiting for sensitive endpoints
@@ -30,11 +30,11 @@ export const strictRateLimiter = rateLimit({
   message: {
     success: false,
     error: 'Too many requests to this endpoint, please try again later',
-    retryAfter: '15 minutes'
+    retryAfter: '15 minutes',
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skipSuccessfulRequests: false
+  skipSuccessfulRequests: false,
 });
 
 // WebSocket connection rate limiting
@@ -43,7 +43,7 @@ export const wsRateLimiter = rateLimit({
   max: 30,
   message: {
     success: false,
-    error: 'Too many WebSocket connections, please try again later'
+    error: 'Too many WebSocket connections, please try again later',
   },
   // Use default key generation (by IP). Custom keyGenerators that reference
   // req.ip are rejected by newer express-rate-limit versions unless using
@@ -59,6 +59,6 @@ export const signalRateLimiter = rateLimit({
   message: {
     success: false,
     error: 'Too many signal requests, please wait before requesting more',
-    retryAfter: '1 minute'
-  }
+    retryAfter: '1 minute',
+  },
 });

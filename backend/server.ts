@@ -23,31 +23,35 @@ const server = createServer(app);
 // Socket.IO setup with CORS
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    methods: ["GET", "POST"],
-    credentials: true
-  }
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    methods: ['GET', 'POST'],
+    credentials: true,
+  },
 });
 
 // Middleware
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "wss:", "https:"],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'", 'wss:', 'https:'],
+      },
     },
-  },
-}));
+  })
+);
 
-app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  })
+);
 
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
@@ -62,7 +66,7 @@ app.get('/health', (req, res) => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
   });
 });
 
@@ -83,7 +87,7 @@ app.use((req, res) => {
   res.status(404).json({
     success: false,
     error: 'Route not found',
-    message: `Cannot ${req.method} ${req.originalUrl}`
+    message: `Cannot ${req.method} ${req.originalUrl}`,
   });
 });
 
@@ -97,7 +101,10 @@ async function startServer() {
       await connectDatabase();
       console.log('✅ Database connected successfully');
     } catch (dbErr) {
-      console.warn('⚠️ Database connection failed — continuing in degraded mode:', dbErr?.message || dbErr);
+      console.warn(
+        '⚠️ Database connection failed — continuing in degraded mode:',
+        dbErr?.message || dbErr
+      );
     }
 
     // Connect to Redis (non-fatal in development)
@@ -105,20 +112,26 @@ async function startServer() {
       await connectRedis();
       console.log('✅ Redis connected successfully');
     } catch (redisErr) {
-      console.warn('⚠️ Redis connection failed — continuing in degraded mode:', redisErr?.message || redisErr);
+      console.warn(
+        '⚠️ Redis connection failed — continuing in degraded mode:',
+        redisErr?.message || redisErr
+      );
     }
 
     // Start server
     server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT} in ${NODE_ENV} mode`);
       console.log(`📡 WebSocket server ready for connections`);
-      console.log(`🌍 CORS enabled for: ${process.env.FRONTEND_URL || "http://localhost:3000"}`);
+      console.log(
+        `🌍 CORS enabled for: ${
+          process.env.FRONTEND_URL || 'http://localhost:3000'
+        }`
+      );
     });
 
     // Graceful shutdown
     process.on('SIGTERM', gracefulShutdown);
     process.on('SIGINT', gracefulShutdown);
-
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     process.exit(1);

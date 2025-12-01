@@ -243,7 +243,9 @@ export class CacheService {
     const current = await this.getClient().zCard(key);
 
     if (current >= maxRequests) {
-      const resetTime = (await this.getClient().zRange(key, 0, 0, { REV: true }))[0];
+      const resetTime = (
+        await this.getClient().zRange(key, 0, 0, { REV: true })
+      )[0];
       return {
         allowed: false,
         remaining: 0,
