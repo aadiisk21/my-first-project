@@ -19,8 +19,10 @@ export async function connectRedis(): Promise<RedisClientType> {
     const redisUrl = process.env.REDIS_URL;
 
     if (process.env.UPSTASH_REDIS_REST_URL && !redisUrl) {
-      logger.warn('UPSTASH_REDIS_REST_URL detected but REDIS_URL is not set.\n' +
-        'For full Redis feature parity, set `REDIS_URL` to your Upstash Redis/TLS URL (rediss://...).');
+      logger.warn(
+        'UPSTASH_REDIS_REST_URL detected but REDIS_URL is not set.\n' +
+          'For full Redis feature parity, set `REDIS_URL` to your Upstash Redis/TLS URL (rediss://...).'
+      );
     }
 
     if (redisUrl) {

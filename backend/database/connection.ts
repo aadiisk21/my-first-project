@@ -20,7 +20,9 @@ export async function connectDatabase(): Promise<Pool> {
     // Prefer DATABASE_URL if provided (managed DBs like Render, Neon, Supabase)
     if (process.env.DATABASE_URL) {
       // Determine SSL behavior: allow explicit DB_SSL=true or auto-detect common managed providers
-      const forceSsl = process.env.DB_SSL === 'true' || /render\.com|neon|supabase|vercel\.app/.test(process.env.DATABASE_URL);
+      const forceSsl =
+        process.env.DB_SSL === 'true' ||
+        /render\.com|neon|supabase|vercel\.app/.test(process.env.DATABASE_URL);
       const sslOption = forceSsl ? { rejectUnauthorized: false } : undefined;
 
       pool = new Pool({
