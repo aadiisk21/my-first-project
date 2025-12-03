@@ -18,3 +18,4 @@
  ○ Compiling / ...
  GET / 200 in 34.3s (compile: 32.5s, render: 1851ms)
  GET /api/trading/pairs 200 in 3.7s (compile: 2.3s, render: 1398ms)
+   Reload env: .env

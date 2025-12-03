@@ -17,29 +17,44 @@ interface DatabaseConfig {
 
 export async function connectDatabase(): Promise<Pool> {
   try {
-    const config: DatabaseConfig = {
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432'),
-      database: process.env.DB_NAME || 'trading_bot',
-      username: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || '',
-      ssl: process.env.NODE_ENV === 'production',
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 10000,
-    };
+    // Prefer DATABASE_URL if provided (managed DBs like Render, Neon, Supabase)
+    if (process.env.DATABASE_URL) {
+      // Determine SSL behavior: allow explicit DB_SSL=true or auto-detect common managed providers
+      const forceSsl = process.env.DB_SSL === 'true' || /render\.com|neon|supabase|vercel\.app/.test(process.env.DATABASE_URL);
+      const sslOption = forceSsl ? { rejectUnauthorized: false } : undefined;
 
-    pool = new Pool({
-      host: config.host,
-      port: config.port,
-      database: config.database,
-      user: config.username,
-      password: config.password,
-      ssl: config.ssl,
-      max: config.max,
-      idleTimeoutMillis: config.idleTimeoutMillis,
-      connectionTimeoutMillis: config.connectionTimeoutMillis,
-    });
+      pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: sslOption,
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000,
+      } as any);
+    } else {
+      const config: DatabaseConfig = {
+        host: process.env.DB_HOST || 'localhost',
+        port: parseInt(process.env.DB_PORT || '5432'),
+        database: process.env.DB_NAME || 'trading_bot',
+        username: process.env.DB_USER || 'postgres',
+        password: process.env.DB_PASSWORD || '',
+        ssl: process.env.NODE_ENV === 'production',
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000,
+      };
+
+      pool = new Pool({
+        host: config.host,
+        port: config.port,
+        database: config.database,
+        user: config.username,
+        password: config.password,
+        ssl: config.ssl,
+        max: config.max,
+        idleTimeoutMillis: config.idleTimeoutMillis,
+        connectionTimeoutMillis: config.connectionTimeoutMillis,
+      });
+    }
 
     // Test the connection
     const client = await pool.connect();

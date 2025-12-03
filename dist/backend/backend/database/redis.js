@@ -9,30 +9,43 @@ const logger_1 = require("../utils/logger");
 let redisClient;
 async function connectRedis() {
     try {
-        const config = {
-            host: process.env.REDIS_HOST || 'localhost',
-            port: parseInt(process.env.REDIS_PORT || '6379'),
-            password: process.env.REDIS_PASSWORD,
-            database: parseInt(process.env.REDIS_DB || '0'),
-            keyPrefix: process.env.REDIS_KEY_PREFIX || 'trading_bot:',
-            retryDelayOnFailover: 100,
-            maxRetriesPerRequest: 3,
-        };
-        redisClient = (0, redis_1.createClient)({
-            socket: {
-                host: config.host,
-                port: config.port,
-                reconnectStrategy: (retries) => {
-                    if (retries > 10) {
-                        logger_1.logger.error('Redis reconnection failed after 10 attempts');
-                        return new Error('Redis reconnection failed');
-                    }
-                    return Math.min(retries * 50, 1000);
+        // Prefer REDIS_URL if provided (supports TLS/managed endpoints)
+        const redisUrl = process.env.REDIS_URL;
+        if (process.env.UPSTASH_REDIS_REST_URL && !redisUrl) {
+            logger_1.logger.warn('UPSTASH_REDIS_REST_URL detected but REDIS_URL is not set.\n' +
+                'For full Redis feature parity, set `REDIS_URL` to your Upstash Redis/TLS URL (rediss://...).');
+        }
+        if (redisUrl) {
+            redisClient = (0, redis_1.createClient)({
+                url: redisUrl,
+            });
+        }
+        else {
+            const config = {
+                host: process.env.REDIS_HOST || 'localhost',
+                port: parseInt(process.env.REDIS_PORT || '6379'),
+                password: process.env.REDIS_PASSWORD,
+                database: parseInt(process.env.REDIS_DB || '0'),
+                keyPrefix: process.env.REDIS_KEY_PREFIX || 'trading_bot:',
+                retryDelayOnFailover: 100,
+                maxRetriesPerRequest: 3,
+            };
+            redisClient = (0, redis_1.createClient)({
+                socket: {
+                    host: config.host,
+                    port: config.port,
+                    reconnectStrategy: (retries) => {
+                        if (retries > 10) {
+                            logger_1.logger.error('Redis reconnection failed after 10 attempts');
+                            return new Error('Redis reconnection failed');
+                        }
+                        return Math.min(retries * 50, 1000);
+                    },
                 },
-            },
-            password: config.password,
-            database: config.database,
-        });
+                password: config.password,
+                database: config.database,
+            });
+        }
         redisClient.on('error', (error) => {
             logger_1.logger.error('Redis client error:', error);
         });
