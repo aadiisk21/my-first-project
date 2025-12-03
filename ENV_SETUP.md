@@ -139,6 +139,8 @@ ENABLE_EMAIL_NOTIFICATIONS=false # Send email alerts
 - `REDIS_PASSWORD`: Redis password (leave empty if none)
 - `REDIS_DB`: Redis database number
 - `REDIS_KEY_PREFIX`: Key prefix for all Redis keys
+ - `REDIS_URL`: Redis connection URL (preferred for managed providers, e.g. `rediss://:<password>@<host>:<port>`)
+ - `UPSTASH_REDIS_REST_URL`: (Upstash REST endpoint) If you use Upstash's REST API, set this value — however, for full Redis feature parity set `REDIS_URL` to the Upstash Redis/TLS URL when available.
 
 ### Authentication
 
