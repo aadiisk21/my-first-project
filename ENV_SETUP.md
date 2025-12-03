@@ -2,11 +2,10 @@
 
 ## Overview
 
-This project uses environment variables to configure backend services, APIs, and database connections. The configuration is split into three files:
+This project uses environment variables to configure backend services, APIs, and database connections. The configuration is split into two files:
 
-- `.env` - Local development configuration (already present)
+- `.env` - Development and production configuration (already present)
 - `.env.example` - Template with all available options and descriptions
-- `.env.local` - Production-ready template with strong security defaults
 
 ## Required Setup Steps
 
@@ -174,23 +173,24 @@ ENABLE_EMAIL_NOTIFICATIONS=false # Send email alerts
 
 ## Production Deployment
 
-For production, use `.env.local` as a template:
+For production deployment, set environment variables through your platform's secrets management:
 
 1. Generate strong, random secrets for JWT_SECRET and REFRESH_TOKEN_SECRET
 2. Use managed database services (AWS RDS, etc.)
 3. Use managed Redis services (AWS ElastiCache, etc.)
 4. Set `NODE_ENV=production`
 5. Set `ENABLE_LIVE_TRADING=true` only if you're confident
-6. Use environment secrets management (AWS Secrets Manager, GitHub Secrets, etc.)
-7. Never commit `.env` or `.env.local` to version control
+6. Use environment secrets management (AWS Secrets Manager, Render.com Environment, GitHub Secrets, etc.)
+7. Never commit `.env` to version control
 
 ## Troubleshooting
 
 ### "Connection refused" errors
 
-- Verify PostgreSQL is running on `DB_HOST:DB_PORT`
-- Verify Redis is running on `REDIS_HOST:REDIS_PORT`
-- Check credentials in `.env` match your services
+- Verify PostgreSQL is running on `DB_HOST:DB_PORT` (or check managed service configuration)
+- Verify Redis is running on `REDIS_HOST:REDIS_PORT` (or check managed service configuration)
+- Check credentials in `.env` or environment variables match your services
+- In production, ensure all environment variables are set through your deployment platform
 
 ### "Invalid JWT" errors
 
