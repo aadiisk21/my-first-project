@@ -91,7 +91,8 @@ async function startServer() {
             console.log('✅ Database connected successfully');
         }
         catch (dbErr) {
-            console.warn('⚠️ Database connection failed — continuing in degraded mode:', (dbErr === null || dbErr === void 0 ? void 0 : dbErr.message) || dbErr);
+            const dbError = dbErr instanceof Error ? dbErr.message : String(dbErr);
+            console.warn('⚠️ Database connection failed — continuing in degraded mode:', dbError);
         }
         // Connect to Redis (non-fatal in development)
         try {
@@ -99,7 +100,8 @@ async function startServer() {
             console.log('✅ Redis connected successfully');
         }
         catch (redisErr) {
-            console.warn('⚠️ Redis connection failed — continuing in degraded mode:', (redisErr === null || redisErr === void 0 ? void 0 : redisErr.message) || redisErr);
+            const redisError = redisErr instanceof Error ? redisErr.message : String(redisErr);
+            console.warn('⚠️ Redis connection failed — continuing in degraded mode:', redisError);
         }
         // Start server
         server.listen(PORT, () => {
