@@ -1,18 +1,35 @@
-import tensorflow as tf
-from tensorflow.keras import layers, models, optimizers, callbacks
+"""
+Advanced Price Prediction Models using Ensemble Machine Learning
+Supports Random Forest, XGBoost, and LightGBM for cryptocurrency trading
+"""
+
 import numpy as np
 import pandas as pd
-from typing import Tuple, Dict, List, Optional
+from typing import Tuple, Dict, List, Optional, Union
 from dataclasses import dataclass
 import logging
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, confusion_matrix
-import json
+import joblib
 import os
+from datetime import datetime
+
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, f1_score
+from sklearn.preprocessing import StandardScaler
+import xgboost as xgb
+import lightgbm as lgb
+import warnings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Suppress noisy warnings about feature name mismatches from sklearn wrappers
+warnings.filterwarnings(
+    "ignore",
+    message=".*does not have valid feature names, but.*was fitted with feature names.*",
+    category=UserWarning
+)
 
 @dataclass
 class ModelConfig:
@@ -20,425 +37,380 @@ class ModelConfig:
     sequence_length: int = 60
     n_features: int = 50
     prediction_horizon: int = 1
-    lstm_units: List[int] = (128, 64, 32)
-    dropout_rate: float = 0.3
-    dense_units: List[int] = (32, 16)
-    learning_rate: float = 0.001
-    batch_size: int = 32
-    epochs: int = 100
-    validation_split: float = 0.2
-    early_stopping_patience: int = 10
-    reduce_lr_patience: int = 5
+    test_size: float = 0.2
+    random_state: int = 42
+    
+    # Random Forest params
+    rf_n_estimators: int = 200
+    rf_max_depth: int = 15
+    rf_min_samples_split: int = 5
+    
+    # XGBoost params
+    xgb_n_estimators: int = 300
+    xgb_max_depth: int = 8
+    xgb_learning_rate: float = 0.1
+    
+    # LightGBM params
+    lgb_n_estimators: int = 300
+    lgb_max_depth: int = 8
+    lgb_learning_rate: float = 0.1
 
-class LSTMPricePredictor:
-    """LSTM model for cryptocurrency price prediction"""
+class EnsemblePricePredictor:
+    """
+    Ensemble model for cryptocurrency price prediction
+    Combines Random Forest, XGBoost, and LightGBM for accurate signals
+    """
 
     def __init__(self, config: ModelConfig = None):
         self.config = config or ModelConfig()
-        self.model = None
-        self.history = None
+        self.models = {}
+        self.scaler = StandardScaler()
+        self.feature_importance = None
         self.class_names = ['SELL', 'HOLD', 'BUY']
-        self.callbacks_list = []
+        self.is_trained = False
+        self.training_history = {}
 
-    def build_model(self, input_shape: Tuple[int, int]) -> models.Model:
-        """Build the LSTM model architecture"""
+    def build_models(self) -> Dict:
+        """Build ensemble of ML models"""
         try:
-            model = models.Sequential()
-
-            # First LSTM layer with return sequences for stacking
-            model.add(layers.LSTM(
-                self.config.lstm_units[0],
-                return_sequences=True,
-                input_shape=input_shape,
-                kernel_regularizer=tf.keras.regularizers.l2(0.01)
-            ))
-            model.add(layers.Dropout(self.config.dropout_rate))
-            model.add(layers.BatchNormalization())
-
-            # Second LSTM layer
-            if len(self.config.lstm_units) > 1:
-                model.add(layers.LSTM(
-                    self.config.lstm_units[1],
-                    return_sequences=True,
-                    kernel_regularizer=tf.keras.regularizers.l2(0.01)
-                ))
-                model.add(layers.Dropout(self.config.dropout_rate))
-                model.add(layers.BatchNormalization())
-
-            # Third LSTM layer (no return sequences)
-            if len(self.config.lstm_units) > 2:
-                model.add(layers.LSTM(
-                    self.config.lstm_units[2],
-                    return_sequences=False,
-                    kernel_regularizer=tf.keras.regularizers.l2(0.01)
-                ))
-                model.add(layers.Dropout(self.config.dropout_rate))
-                model.add(layers.BatchNormalization())
-
-            # Dense layers
-            for units in self.config.dense_units:
-                model.add(layers.Dense(
-                    units,
-                    activation='relu',
-                    kernel_regularizer=tf.keras.regularizers.l2(0.01)
-                ))
-                model.add(layers.Dropout(self.config.dropout_rate))
-                model.add(layers.BatchNormalization())
-
-            # Output layer - 3 classes (SELL, HOLD, BUY)
-            model.add(layers.Dense(3, activation='softmax'))
-
-            # Compile model
-            optimizer = optimizers.Adam(learning_rate=self.config.learning_rate)
-            model.compile(
-                optimizer=optimizer,
-                loss='sparse_categorical_crossentropy',
-                metrics=['accuracy', 'sparse_categorical_crossentropy']
+            logger.info("Building ensemble models...")
+            
+            # Random Forest
+            self.models['rf'] = RandomForestClassifier(
+                n_estimators=self.config.rf_n_estimators,
+                max_depth=self.config.rf_max_depth,
+                min_samples_split=self.config.rf_min_samples_split,
+                random_state=self.config.random_state,
+                n_jobs=-1,
+                class_weight='balanced'
             )
-
-            self.model = model
-            logger.info(f"Model built with {model.count_params():,} parameters")
-            return model
+            
+            # XGBoost
+            self.models['xgb'] = xgb.XGBClassifier(
+                n_estimators=self.config.xgb_n_estimators,
+                max_depth=self.config.xgb_max_depth,
+                learning_rate=self.config.xgb_learning_rate,
+                random_state=self.config.random_state,
+                n_jobs=-1,
+                objective='multi:softprob',
+                num_class=3,
+                eval_metric='mlogloss',
+                verbosity=0
+            )
+            
+            # LightGBM
+            self.models['lgb'] = lgb.LGBMClassifier(
+                n_estimators=self.config.lgb_n_estimators,
+                max_depth=self.config.lgb_max_depth,
+                learning_rate=self.config.lgb_learning_rate,
+                random_state=self.config.random_state,
+                n_jobs=-1,
+                objective='multiclass',
+                num_class=3,
+                class_weight='balanced',
+                verbosity=-1
+            )
+            
+            logger.info(f"Built {len(self.models)} models: {list(self.models.keys())}")
+            return self.models
 
         except Exception as e:
-            logger.error(f"Error building model: {str(e)}")
+            logger.error(f"Error building models: {str(e)}")
             raise
 
-    def setup_callbacks(self, model_path: str = 'models/best_lstm_model.h5') -> None:
-        """Setup training callbacks"""
+    def train(self, X: np.ndarray, y: np.ndarray, verbose: bool = True) -> Dict:
+        """
+        Train all ensemble models
+        
+        Args:
+            X: Feature matrix (n_samples, n_features)
+            y: Target labels (n_samples,)
+            verbose: Print training progress
+            
+        Returns:
+            Dictionary with training metrics
+        """
         try:
-            os.makedirs('models', exist_ok=True)
-
-            # Model checkpoint
-            checkpoint_callback = callbacks.ModelCheckpoint(
-                filepath=model_path,
-                monitor='val_accuracy',
-                save_best_only=True,
-                save_weights_only=False,
-                mode='max',
-                verbose=1
+            logger.info(f"Training on {X.shape[0]} samples with {X.shape[1]} features")
+            
+            # Split data
+            X_train, X_val, y_train, y_val = train_test_split(
+                X, y,
+                test_size=self.config.test_size,
+                random_state=self.config.random_state,
+                stratify=y
             )
-
-            # Early stopping
-            early_stopping = callbacks.EarlyStopping(
-                monitor='val_accuracy',
-                patience=self.config.early_stopping_patience,
-                restore_best_weights=True,
-                mode='max',
-                verbose=1
-            )
-
-            # Reduce learning rate on plateau
-            reduce_lr = callbacks.ReduceLROnPlateau(
-                monitor='val_loss',
-                factor=0.5,
-                patience=self.config.reduce_lr_patience,
-                min_lr=1e-7,
-                mode='min',
-                verbose=1
-            )
-
-            # CSV logger
-            csv_logger = callbacks.CSVLogger(
-                'models/training_log.csv',
-                append=True
-            )
-
-            self.callbacks_list = [
-                checkpoint_callback,
-                early_stopping,
-                reduce_lr,
-                csv_logger
-            ]
-
-            logger.info(f"Setup {len(self.callbacks_list)} training callbacks")
-
-        except Exception as e:
-            logger.error(f"Error setting up callbacks: {str(e)}")
-            raise
-
-    def train(self,
-              X: np.ndarray,
-              y: np.ndarray,
-              validation_split: Optional[float] = None) -> callbacks.History:
-        """Train the LSTM model"""
-        try:
-            if self.model is None:
-                raise ValueError("Model must be built before training")
-
-            # Use provided validation_split or default
-            val_split = validation_split or self.config.validation_split
-
-            # Split data for training and validation
-            if isinstance(validation_split, float) and validation_split > 0:
-                X_train, X_val, y_train, y_val = train_test_split(
-                    X, y, test_size=val_split, random_state=42, stratify=y
-                )
-                validation_data = (X_val, y_val)
-                train_data = (X_train, y_train)
-            else:
-                validation_data = None
-                train_data = (X, y)
-
-            # Class weights for imbalanced dataset
-            from sklearn.utils.class_weight import compute_class_weight
-            class_weights = compute_class_weight(
-                'balanced',
-                classes=np.unique(y),
-                y=y
-            )
-            class_weight_dict = dict(enumerate(class_weights))
-
-            logger.info(f"Starting training with {len(train_data[0])} samples")
-            logger.info(f"Class distribution: {np.bincount(train_data[1])}")
-            logger.info(f"Class weights: {class_weight_dict}")
-
-            # Train model
-            history = self.model.fit(
-                train_data[0], train_data[1],
-                validation_data=validation_data,
-                epochs=self.config.epochs,
-                batch_size=self.config.batch_size,
-                callbacks=self.callbacks_list,
-                class_weight=class_weight_dict,
-                verbose=1
-            )
-
-            self.history = history
-            logger.info("Training completed successfully")
-            return history
+            
+            # Scale features
+            X_train_scaled = self.scaler.fit_transform(X_train)
+            X_val_scaled = self.scaler.transform(X_val)
+            
+            # Build models if not already built
+            if not self.models:
+                self.build_models()
+            
+            # Train each model
+            results = {}
+            for name, model in self.models.items():
+                logger.info(f"Training {name.upper()} model...")
+                
+                # Train
+                model.fit(X_train_scaled, y_train)
+                
+                # Validate
+                y_pred = model.predict(X_val_scaled)
+                accuracy = accuracy_score(y_val, y_pred)
+                f1 = f1_score(y_val, y_pred, average='weighted', zero_division=0)
+                
+                results[name] = {
+                    'accuracy': accuracy,
+                    'f1_score': f1,
+                    'classification_report': classification_report(y_val, y_pred, target_names=self.class_names, zero_division=0)
+                }
+                
+                if verbose:
+                    logger.info(f"{name.upper()} - Accuracy: {accuracy:.4f}, F1: {f1:.4f}")
+            
+            # Calculate ensemble predictions
+            ensemble_pred = self._ensemble_predict(X_val_scaled)
+            ensemble_accuracy = accuracy_score(y_val, ensemble_pred)
+            ensemble_f1 = f1_score(y_val, ensemble_pred, average='weighted', zero_division=0)
+            
+            results['ensemble'] = {
+                'accuracy': ensemble_accuracy,
+                'f1_score': ensemble_f1,
+                'classification_report': classification_report(y_val, ensemble_pred, target_names=self.class_names, zero_division=0)
+            }
+            
+            logger.info(f"ENSEMBLE - Accuracy: {ensemble_accuracy:.4f}, F1: {ensemble_f1:.4f}")
+            
+            self.is_trained = True
+            self.training_history = results
+            
+            # Calculate feature importance
+            self._calculate_feature_importance()
+            
+            return results
 
         except Exception as e:
             logger.error(f"Error during training: {str(e)}")
             raise
 
-    def predict(self, X: np.ndarray, return_probabilities: bool = False) -> np.ndarray:
-        """Make predictions on new data"""
+    def _ensemble_predict(self, X: np.ndarray) -> np.ndarray:
+        """Make ensemble prediction by voting"""
+        predictions = []
+        for model in self.models.values():
+            pred = model.predict(X)
+            predictions.append(pred)
+        
+        # Majority voting
+        predictions = np.array(predictions)
+        ensemble_pred = np.apply_along_axis(
+            lambda x: np.bincount(x).argmax(),
+            axis=0,
+            arr=predictions
+        )
+        return ensemble_pred
+
+    def _ensemble_predict_proba(self, X: np.ndarray) -> np.ndarray:
+        """Get ensemble prediction probabilities"""
+        probas = []
+        for model in self.models.values():
+            proba = model.predict_proba(X)
+            probas.append(proba)
+        
+        # Average probabilities
+        ensemble_proba = np.mean(probas, axis=0)
+        return ensemble_proba
+
+    def predict(self, X: np.ndarray, return_proba: bool = True) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+        """
+        Make predictions on new data
+        
+        Args:
+            X: Feature matrix
+            return_proba: Return probability scores
+            
+        Returns:
+            Predictions and optionally probabilities
+        """
+        if not self.is_trained:
+            raise ValueError("Models must be trained before prediction")
+        
+        # Scale features
+        X_scaled = self.scaler.transform(X)
+        
+        # Get ensemble predictions
+        predictions = self._ensemble_predict(X_scaled)
+        
+        if return_proba:
+            probabilities = self._ensemble_predict_proba(X_scaled)
+            return predictions, probabilities
+        
+        return predictions
+
+    def predict_single(self, features: Dict[str, float]) -> Dict:
+        """
+        Predict signal for single data point
+        
+        Args:
+            features: Dictionary of feature values
+            
+        Returns:
+            Dictionary with prediction and confidence
+        """
+        # Convert features to array
+        feature_array = np.array([list(features.values())])
+        
+        # Get prediction
+        pred, proba = self.predict(feature_array, return_proba=True)
+        
+        signal_type = self.class_names[pred[0]]
+        confidence = float(proba[0][pred[0]] * 100)
+        
+        return {
+            'signal': signal_type,
+            'confidence': confidence,
+            'probabilities': {
+                'SELL': float(proba[0][0] * 100),
+                'HOLD': float(proba[0][1] * 100),
+                'BUY': float(proba[0][2] * 100)
+            }
+        }
+
+    def _calculate_feature_importance(self):
+        """Calculate and store feature importance"""
         try:
-            if self.model is None:
-                raise ValueError("Model must be trained or loaded before prediction")
-
-            predictions = self.model.predict(X, verbose=0)
-
-            if return_probabilities:
-                return predictions
-            else:
-                return np.argmax(predictions, axis=1)
-
+            # Get feature importance from Random Forest
+            if 'rf' in self.models:
+                self.feature_importance = self.models['rf'].feature_importances_
+                logger.info("Feature importance calculated")
         except Exception as e:
-            logger.error(f"Error making predictions: {str(e)}")
-            raise
+            logger.warning(f"Could not calculate feature importance: {str(e)}")
 
-    def evaluate(self, X: np.ndarray, y: np.ndarray) -> Dict:
-        """Evaluate model performance"""
-        try:
-            if self.model is None:
-                raise ValueError("Model must be trained or loaded before evaluation")
-
-            # Get predictions
-            predictions = self.predict(X, return_probabilities=False)
-
-            # Calculate metrics
-            report = classification_report(
-                y, predictions,
-                target_names=self.class_names,
-                output_dict=True
-            )
-
-            confusion_mat = confusion_matrix(y, predictions)
-
-            # Calculate accuracy
-            accuracy = np.mean(predictions == y)
-
-            # Calculate confidence scores
-            probabilities = self.predict(X, return_probabilities=True)
-            max_probs = np.max(probabilities, axis=1)
-            avg_confidence = np.mean(max_probs)
-
-            evaluation_results = {
+    def evaluate(self, X_test: np.ndarray, y_test: np.ndarray) -> Dict:
+        """
+        Evaluate models on test data
+        
+        Args:
+            X_test: Test features
+            y_test: Test labels
+            
+        Returns:
+            Dictionary with evaluation metrics
+        """
+        X_test_scaled = self.scaler.transform(X_test)
+        
+        results = {}
+        for name, model in self.models.items():
+            y_pred = model.predict(X_test_scaled)
+            accuracy = accuracy_score(y_test, y_pred)
+            f1 = f1_score(y_test, y_pred, average='weighted')
+            
+            results[name] = {
                 'accuracy': accuracy,
-                'confusion_matrix': confusion_mat.tolist(),
-                'classification_report': report,
-                'average_confidence': avg_confidence,
-                'predictions_distribution': {
-                    class_name: int(np.sum(predictions == i))
-                    for i, class_name in enumerate(self.class_names)
-                },
-                'actual_distribution': {
-                    class_name: int(np.sum(y == i))
-                    for i, class_name in enumerate(self.class_names)
-                }
+                'f1_score': f1,
+                'classification_report': classification_report(y_test, y_pred, target_names=self.class_names),
+                'confusion_matrix': confusion_matrix(y_test, y_pred).tolist()
             }
+        
+        # Ensemble evaluation
+        ensemble_pred = self._ensemble_predict(X_test_scaled)
+        results['ensemble'] = {
+            'accuracy': accuracy_score(y_test, ensemble_pred),
+            'f1_score': f1_score(y_test, ensemble_pred, average='weighted'),
+            'classification_report': classification_report(y_test, ensemble_pred, target_names=self.class_names),
+            'confusion_matrix': confusion_matrix(y_test, ensemble_pred).tolist()
+        }
+        
+        return results
 
-            logger.info(f"Evaluation completed. Accuracy: {accuracy:.4f}")
-            return evaluation_results
-
-        except Exception as e:
-            logger.error(f"Error during evaluation: {str(e)}")
-            raise
-
-    def save_model(self, filepath: str) -> None:
-        """Save the trained model"""
+    def save_models(self, path: str = 'models/ensemble_predictor.pkl'):
+        """Save trained models to disk"""
         try:
-            if self.model is None:
-                raise ValueError("No model to save")
-
-            os.makedirs(os.path.dirname(filepath), exist_ok=True)
-            self.model.save(filepath)
-
-            # Save configuration
-            config_path = filepath.replace('.h5', '_config.json')
-            with open(config_path, 'w') as f:
-                json.dump(self.config.__dict__, f, indent=2)
-
-            logger.info(f"Model saved to {filepath}")
-
-        except Exception as e:
-            logger.error(f"Error saving model: {str(e)}")
-            raise
-
-    def load_model(self, filepath: str) -> None:
-        """Load a saved model"""
-        try:
-            # Load configuration
-            config_path = filepath.replace('.h5', '_config.json')
-            if os.path.exists(config_path):
-                with open(config_path, 'r') as f:
-                    config_dict = json.load(f)
-                self.config = ModelConfig(**config_dict)
-
-            # Load model
-            self.model = models.load_model(filepath)
-            logger.info(f"Model loaded from {filepath}")
-
-        except Exception as e:
-            logger.error(f"Error loading model: {str(e)}")
-            raise
-
-    def get_model_summary(self) -> str:
-        """Get model architecture summary"""
-        try:
-            if self.model is None:
-                return "No model built yet"
-
-            import io
-            from contextlib import redirect_stdout
-
-            f = io.StringIO()
-            with redirect_stdout(f):
-                self.model.summary()
-
-            return f.getvalue()
-
-        except Exception as e:
-            logger.error(f"Error getting model summary: {str(e)}")
-            return f"Error: {str(e)}"
-
-class EnsemblePredictor:
-    """Ensemble of multiple models for better predictions"""
-
-    def __init__(self, models: List[models.Model] = None):
-        self.models = models or []
-        self.weights = []
-
-    def add_model(self, model: models.Model, weight: float = 1.0) -> None:
-        """Add a model to the ensemble"""
-        self.models.append(model)
-        self.weights.append(weight)
-
-    def predict_ensemble(self, X: np.ndarray) -> np.ndarray:
-        """Make ensemble predictions"""
-        try:
-            if not self.models:
-                raise ValueError("No models in ensemble")
-
-            all_predictions = []
-            for model in self.models:
-                pred = model.predict(X, verbose=0)
-                all_predictions.append(pred)
-
-            # Weighted average of predictions
-            weights = np.array(self.weights)
-            weights = weights / np.sum(weights)  # Normalize weights
-
-            ensemble_pred = np.zeros_like(all_predictions[0])
-            for pred, weight in zip(all_predictions, weights):
-                ensemble_pred += pred * weight
-
-            return ensemble_pred
-
-        except Exception as e:
-            logger.error(f"Error in ensemble prediction: {str(e)}")
-            raise
-
-    def evaluate_ensemble(self, X: np.ndarray, y: np.ndarray) -> Dict:
-        """Evaluate ensemble performance"""
-        try:
-            ensemble_predictions = self.predict_ensemble(X)
-            ensemble_classes = np.argmax(ensemble_predictions, axis=1)
-
-            # Calculate metrics
-            accuracy = np.mean(ensemble_classes == y)
-
-            return {
-                'ensemble_accuracy': accuracy,
-                'ensemble_confidence': np.mean(np.max(ensemble_predictions, axis=1)),
-                'individual_predictions': len(self.models)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            
+            save_data = {
+                'models': self.models,
+                'scaler': self.scaler,
+                'config': self.config,
+                'feature_importance': self.feature_importance,
+                'training_history': self.training_history,
+                'class_names': self.class_names,
+                'is_trained': self.is_trained
             }
-
+            
+            joblib.dump(save_data, path)
+            logger.info(f"Models saved to {path}")
         except Exception as e:
-            logger.error(f"Error evaluating ensemble: {str(e)}")
+            logger.error(f"Error saving models: {str(e)}")
             raise
 
-# Training script
-def train_model():
-    """Example training script"""
-    try:
-        # Generate mock data for demonstration
-        sequence_length = 60
-        n_features = 30
-        n_samples = 10000
+    def load_models(self, path: str = 'models/ensemble_predictor.pkl'):
+        """Load trained models from disk"""
+        try:
+            save_data = joblib.load(path)
+            
+            self.models = save_data['models']
+            self.scaler = save_data['scaler']
+            self.config = save_data['config']
+            self.feature_importance = save_data.get('feature_importance')
+            self.training_history = save_data.get('training_history', {})
+            self.class_names = save_data['class_names']
+            self.is_trained = save_data['is_trained']
+            
+            logger.info(f"Models loaded from {path}")
+        except Exception as e:
+            logger.error(f"Error loading models: {str(e)}")
+            raise
 
-        # Create synthetic data
-        X = np.random.randn(n_samples, sequence_length, n_features)
-        # Create synthetic labels (0: SELL, 1: HOLD, 2: BUY)
-        y = np.random.choice(3, n_samples, p=[0.3, 0.4, 0.3])
+    def get_model_info(self) -> Dict:
+        """Get information about trained models"""
+        return {
+            'is_trained': self.is_trained,
+            'models': list(self.models.keys()),
+            'n_features': self.scaler.n_features_in_ if hasattr(self.scaler, 'n_features_in_') else None,
+            'training_history': self.training_history,
+            'class_names': self.class_names
+        }
 
-        # Split data
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y
-        )
 
-        # Create and train model
-        config = ModelConfig(
-            sequence_length=sequence_length,
-            n_features=n_features,
-            lstm_units=[128, 64],
-            epochs=50,
-            batch_size=64
-        )
-
-        predictor = LSTMPricePredictor(config)
-        predictor.build_model((sequence_length, n_features))
-        predictor.setup_callbacks()
-
-        # Train model
-        history = predictor.train(X_train, y_train)
-
-        # Evaluate model
-        evaluation = predictor.evaluate(X_test, y_test)
-        logger.info(f"Test Accuracy: {evaluation['accuracy']:.4f}")
-
-        # Save model
-        predictor.save_model('models/crypto_price_predictor.h5')
-
-        return predictor, evaluation
-
-    except Exception as e:
-        logger.error(f"Error in training script: {str(e)}")
-        raise
-
-if __name__ == "__main__":
-    # Run training if script is executed directly
-    model, results = train_model()
-    print(f"Training completed. Test accuracy: {results['accuracy']:.4f}")
+# Example usage and testing
+if __name__ == '__main__':
+    logger.info("Testing EnsemblePricePredictor...")
+    
+    # Generate sample data
+    np.random.seed(42)
+    n_samples = 1000
+    n_features = 50
+    
+    X = np.random.randn(n_samples, n_features)
+    y = np.random.randint(0, 3, n_samples)  # 0=SELL, 1=HOLD, 2=BUY
+    
+    # Create and train model
+    config = ModelConfig()
+    predictor = EnsemblePricePredictor(config)
+    
+    logger.info("Training models...")
+    results = predictor.train(X, y)
+    
+    logger.info("\nTraining Results:")
+    for model_name, metrics in results.items():
+        logger.info(f"\n{model_name.upper()}:")
+        logger.info(f"  Accuracy: {metrics['accuracy']:.4f}")
+        logger.info(f"  F1 Score: {metrics['f1_score']:.4f}")
+    
+    # Test prediction
+    logger.info("\nTesting prediction...")
+    test_features = {f'feature_{i}': np.random.randn() for i in range(n_features)}
+    prediction = predictor.predict_single(test_features)
+    
+    logger.info(f"\nPrediction: {prediction['signal']}")
+    logger.info(f"Confidence: {prediction['confidence']:.2f}%")
+    logger.info(f"Probabilities: {prediction['probabilities']}")
+    
+    # Save models
+    logger.info("\nSaving models...")
+    predictor.save_models()
+    
+    logger.info("\nTest completed successfully!")

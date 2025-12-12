@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { TradingChart } from '@/components/TradingChart';
+import { TradingChart } from '@/components/TradingChartEnhanced';
 import { MarketOverview } from '@/components/MarketOverview';
 import { SignalFeed } from '@/components/SignalFeed';
 import { QuickStats } from '@/components/QuickStats';
+import { useMarketData } from '@/hooks/useMarketData';
 import { useTradingStore } from '@/stores/useTradingStore';
 import {
   ArrowTrendingUpIcon,
@@ -15,35 +16,42 @@ import {
 
 export default function Dashboard() {
   const [selectedTimeframe, setSelectedTimeframe] = useState('1h');
-  const [selectedPair, setSelectedPair] = useState('BTC/USDT');
-  const [isLoading, setIsLoading] = useState(true);
+  const [selectedPair, setSelectedPair] = useState('BTCUSDT');
 
   // Select only the pieces of state we need to avoid subscribing to the whole store
   const pairs = useTradingStore((s) => s.pairs);
   const activeSignals = useTradingStore((s) => s.activeSignals);
-  const storeIsLoading = useTradingStore((s) => s.isLoading);
   const setStoreSelectedPair = useTradingStore((s) => s.setSelectedPair);
   const setStoreSelectedTimeframe = useTradingStore(
     (s) => s.setSelectedTimeframe
   );
 
-  // Initialize dashboard data
+  // Fetch market data for the selected pair
+  const { data: marketData, isLoading: isLoadingChart } = useMarketData({
+    symbol: selectedPair,
+    timeframe: selectedTimeframe,
+    limit: 100,
+  });
+
+  // Fetch pairs and populate the store
   useEffect(() => {
-    const initializeDashboard = async () => {
+    const fetchPairs = async () => {
       try {
-        setIsLoading(true);
-        // Fetch initial data
-        // This would connect to your API
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const response = await fetch('/api/trading/pairs');
+        if (!response.ok) throw new Error('Failed to fetch pairs');
+        const result = await response.json();
+        if (result.success && result.data?.pairs) {
+          useTradingStore.getState().setPairs(result.data.pairs);
+        }
       } catch (error) {
-        console.error('Failed to initialize dashboard:', error);
-      } finally {
-        setIsLoading(false);
+        console.error('Error fetching pairs:', error);
       }
     };
 
-    initializeDashboard();
-  }, []);
+    if (!pairs || pairs.length === 0) {
+      fetchPairs();
+    }
+  }, [pairs]);
 
   // Handle pair selection
   useEffect(() => {
@@ -54,14 +62,6 @@ export default function Dashboard() {
   useEffect(() => {
     setStoreSelectedTimeframe?.(selectedTimeframe);
   }, [selectedTimeframe, setStoreSelectedTimeframe]);
-
-  if (isLoading || storeIsLoading) {
-    return (
-      <div className='flex items-center justify-center min-h-screen'>
-        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary'></div>
-      </div>
-    );
-  }
 
   return (
     <div className='space-y-6 p-6'>
@@ -93,6 +93,34 @@ export default function Dashboard() {
               <option value='1d'>1d</option>
             </select>
           </div>
+
+          <button
+            onClick={async () => {
+              try {
+                const response = await fetch('/api/signals/generate', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    symbols: [selectedPair],
+                    timeframes: [selectedTimeframe],
+                    riskTolerance: 'MODERATE',
+                    minConfidence: 60,
+                  }),
+                });
+                const data = await response.json();
+                if (data.success) {
+                  alert(`Generated ${data.data.signals.length} AI signals!`);
+                  // Refresh signals
+                  window.location.reload();
+                }
+              } catch (error) {
+                console.error('Error generating signals:', error);
+              }
+            }}
+            className='px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm font-medium'
+          >
+            🤖 Generate AI Signal
+          </button>
 
           <button className='relative p-2 text-muted-foreground hover:text-foreground transition-colors'>
             <BellIcon className='h-5 w-5' />

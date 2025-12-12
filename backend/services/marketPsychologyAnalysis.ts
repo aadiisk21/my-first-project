@@ -1,4 +1,4 @@
-import { MarketData, TechnicalIndicators } from '../../src/types';
+import type { MarketData, TechnicalIndicators } from '../../src/types/index';
 
 interface FearGreedIndex {
   value: number;

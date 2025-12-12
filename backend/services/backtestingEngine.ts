@@ -1,10 +1,10 @@
-import { MarketData, TechnicalIndicators } from '../../src/types';
-import { SMCAnalysis } from './smcAnalysis';
-import { VolumeProfileAnalysis } from './volumeProfileAnalysis';
-import { MarketPsychologyAnalysis } from './marketPsychologyAnalysis';
-import { FibonacciAnalysis } from './fibonacciAnalysis';
-import { ICTAnalysis } from './ictAnalysis';
-import { logger } from '../utils/logger';
+import type { MarketData, TechnicalIndicators } from '../../src/types/index';
+import { SMCAnalysis } from './smcAnalysis.ts';
+import { VolumeProfileAnalysis } from './volumeProfileAnalysis.ts';
+import { MarketPsychologyAnalysis } from './marketPsychologyAnalysis.ts';
+import { FibonacciAnalysis } from './fibonacciAnalysis.ts';
+import { ICTAnalysis } from './ictAnalysis.ts';
+import { logger } from '../utils/logger.ts';
 
 // Enhanced interfaces for comprehensive backtesting
 interface BacktestConfig {

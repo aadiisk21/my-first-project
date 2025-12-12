@@ -1,0 +1,7 @@
+{
+  "symbol": "AVAXUSDT",
+  "timeframe": "4h",
+  "trained_at": "2025-12-12T21:51:17.843354",
+  "data_file": "D:\\Project-Bot\\my-first-project\\ml\\data\\avaxusdt_4h.csv",
+  "model_file": "D:\\Project-Bot\\my-first-project\\ml\\models\\avaxusdt_4h_ensemble.pkl"
+}

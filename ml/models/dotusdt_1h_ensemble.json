@@ -1,0 +1,7 @@
+{
+  "symbol": "DOTUSDT",
+  "timeframe": "1h",
+  "trained_at": "2025-12-12T21:22:21.215977",
+  "data_file": "D:\\Project-Bot\\my-first-project\\ml\\data\\dotusdt_1h.csv",
+  "model_file": "D:\\Project-Bot\\my-first-project\\ml\\models\\dotusdt_1h_ensemble.pkl"
+}

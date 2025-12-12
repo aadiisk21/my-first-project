@@ -1,0 +1,17 @@
+# Core ML dependencies for price prediction
+# Using latest versions with pre-built wheels for Python 3.14
+numpy
+pandas
+scikit-learn
+xgboost
+lightgbm
+ta
+joblib
+tqdm
+
+# Visualization (optional)
+matplotlib
+seaborn
+
+# Note: Using latest versions to get Python 3.14 pre-built wheels
+# pandas-ta removed - incompatible with Python 3.14 (requires numba<3.14)

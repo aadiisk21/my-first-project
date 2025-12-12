@@ -1,0 +1,7 @@
+{
+  "symbol": "BNBUSDT",
+  "timeframe": "1h",
+  "trained_at": "2025-12-12T19:16:09.279973",
+  "data_file": "D:\\Project-Bot\\my-first-project\\ml\\data\\bnbusdt_1h.csv",
+  "model_file": "D:\\Project-Bot\\my-first-project\\ml\\models\\bnbusdt_1h_ensemble.pkl"
+}

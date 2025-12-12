@@ -6,14 +6,14 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
 
-import tradingRoutes from './api/trading.js';
-import signalRoutes from './api/signals.js';
-import userRoutes from './api/users.js';
-import { setupWebSocketHandlers } from './websocket/handler.js';
-import { errorHandler } from './middleware/errorHandler.js';
-import { rateLimiter } from './middleware/rateLimiter.js';
-import { connectDatabase } from './database/connection.js';
-import { connectRedis } from './database/redis.js';
+import tradingRoutes from './api/trading.ts';
+import signalRoutes from './api/signals.ts';
+import userRoutes from './api/users.ts';
+import { setupWebSocketHandlers } from './websocket/handler.ts';
+import { errorHandler } from './middleware/errorHandler.ts';
+import { rateLimiter } from './middleware/rateLimiter.ts';
+import { connectDatabase } from './database/connection.ts';
+import { connectRedis } from './database/redis.ts';
 
 dotenv.config();
 
@@ -91,7 +91,7 @@ app.use((req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3003;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 async function startServer() {
@@ -173,8 +173,6 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Start the server
-if (require.main === module) {
-  startServer();
-}
+startServer();
 
 export { app, io };

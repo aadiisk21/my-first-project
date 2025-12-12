@@ -147,7 +147,6 @@ REDIS_DB=0
 
 # JWT
 JWT_SECRET=your_jwt_secret_key
-
 # Frontend URL
 FRONTEND_URL=http://localhost:3000
 

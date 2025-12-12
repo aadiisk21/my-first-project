@@ -1,0 +1,7 @@
+{
+  "symbol": "SOLUSDT",
+  "timeframe": "4h",
+  "trained_at": "2025-12-12T19:46:55.168885",
+  "data_file": "D:\\Project-Bot\\my-first-project\\ml\\data\\solusdt_4h.csv",
+  "model_file": "D:\\Project-Bot\\my-first-project\\ml\\models\\solusdt_4h_ensemble.pkl"
+}

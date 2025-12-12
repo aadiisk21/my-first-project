@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { MarketData, TradingPair, TechnicalIndicators } from '../../src/types';
+import type { MarketData, TradingPair, TechnicalIndicators } from '../../src/types/index';
 
 interface TradingViewConfig {
   baseUrl: string;

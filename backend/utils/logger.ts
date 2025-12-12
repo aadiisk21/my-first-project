@@ -1,12 +1,14 @@
 import { createWriteStream, WriteStream } from 'fs';
 import { join } from 'path';
 
-export enum LogLevel {
-  ERROR = 0,
-  WARN = 1,
-  INFO = 2,
-  DEBUG = 3,
-}
+export const LogLevel = {
+  ERROR: 0,
+  WARN: 1,
+  INFO: 2,
+  DEBUG: 3,
+} as const;
+
+export type LogLevel = (typeof LogLevel)[keyof typeof LogLevel];
 
 export interface LogEntry {
   timestamp: string;
@@ -50,7 +52,8 @@ export class Logger {
   }
 
   private formatMessage(entry: LogEntry): string {
-    const levelName = LogLevel[entry.level];
+    const levelNames = ['ERROR', 'WARN', 'INFO', 'DEBUG'];
+    const levelName = levelNames[entry.level] ?? String(entry.level);
     const timestamp = entry.timestamp;
     const message = entry.message;
 

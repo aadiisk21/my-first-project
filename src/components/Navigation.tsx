@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
@@ -27,7 +27,13 @@ const navigation = [
 export function Navigation() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Prevent hydration mismatch by deferring theme-dependent content to client
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const getThemeIcon = () => {
     const resolved = theme ?? 'system';
@@ -91,13 +97,15 @@ export function Navigation() {
           {/* Right side actions */}
           <div className='hidden sm:ml-6 sm:flex sm:items-center space-x-2'>
             {/* Theme toggle */}
-            <button
-              onClick={cycleTheme}
-              className='p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors'
-              title={`Current theme: ${theme ?? 'system'}`}
-            >
-              <ThemeIcon className='h-5 w-5' />
-            </button>
+            {mounted && (
+              <button
+                onClick={cycleTheme}
+                className='p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors'
+                title={`Current theme: ${theme ?? 'system'}`}
+              >
+                <ThemeIcon className='h-5 w-5' />
+              </button>
+            )}
 
             {/* Notifications */}
             <button className='p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors relative'>

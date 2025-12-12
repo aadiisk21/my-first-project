@@ -1,5 +1,6 @@
-import { createClient, RedisClientType } from 'redis';
-import { logger } from '../utils/logger';
+import { createClient } from 'redis';
+import type { RedisClientType } from 'redis';
+import { logger } from '../utils/logger.ts';
 
 let redisClient: RedisClientType;
 

@@ -1,0 +1,22 @@
+{
+  "symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "BNBUSDT",
+    "SOLUSDT",
+    "XRPUSDT",
+    "ADAUSDT",
+    "DOGEUSDT",
+    "MATICUSDT",
+    "DOTUSDT",
+    "AVAXUSDT"
+  ],
+  "timeframes": [
+    "1h",
+    "4h"
+  ],
+  "days_history": 90,
+  "retrain_interval_hours": 24,
+  "min_candles": 100,
+  "parallel_training": 3
+}

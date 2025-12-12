@@ -1,0 +1,7 @@
+{
+  "symbol": "BTCUSDT",
+  "timeframe": "1h",
+  "trained_at": "2025-12-12T18:28:56.072048",
+  "data_file": "D:\\Project-Bot\\my-first-project\\ml\\data\\btcusdt_1h.csv",
+  "model_file": "D:\\Project-Bot\\my-first-project\\ml\\models\\btcusdt_1h_ensemble.pkl"
+}

@@ -43,6 +43,45 @@ class DataProcessor:
         self.scalers = {}
         self.feature_columns = []
 
+    def prepare_training_data(
+        self,
+        df: pd.DataFrame,
+        sequence_length: int = 60,
+        prediction_horizon: int = 1,
+        normalize: bool = True,
+        augment: bool = False
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """End-to-end feature pipeline used by trainer/auto_trainer."""
+        try:
+            # Ensure timestamp parsed for time features
+            if 'timestamp' in df.columns:
+                df = df.copy()
+                df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+            # 1) indicators
+            df_features = self.calculate_technical_indicators(df)
+
+            # 2) sequences + labels
+            X, y = self.create_sequences(
+                df_features,
+                sequence_length=sequence_length,
+                prediction_horizon=prediction_horizon
+            )
+
+            # 3) normalization
+            if normalize:
+                X = self.normalize_features(X, fit=True)
+
+            # 4) optional augmentation
+            if augment:
+                X, y = self.add_noise_augmentation(X, y)
+
+            return X, y
+
+        except Exception as e:
+            logger.error(f"Error preparing training data: {e}")
+            raise
+
     def load_market_data(self, data: List[Dict]) -> pd.DataFrame:
         """Convert raw market data to DataFrame"""
         try:
@@ -213,8 +252,10 @@ class DataProcessor:
 
         # Candlestick patterns (simplified)
         df['is_doji'] = np.abs(df['close'] - df['open']) < (0.01 * df['close'])
-        df['is_hammer'] = ((df['high'] - df['low']) > 2 * np.abs(df['close'] - df['open']) and
-                           ((df['close'] - df['low']) / (df['high'] - df['low'])) > 0.6)
+        # Use element-wise ops; guard against zero range to avoid division warnings
+        range_hl = df['high'] - df['low']
+        body_ratio = (df['close'] - df['low']) / range_hl.replace(0, np.nan)
+        df['is_hammer'] = ((range_hl > 2 * np.abs(df['close'] - df['open'])) & (body_ratio > 0.6)).fillna(False)
 
         # Gap detection
         df['gap_up'] = df['low'] > df['high'].shift()

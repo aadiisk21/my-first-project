@@ -2,42 +2,35 @@
 
 import React, { useState, useEffect } from 'react';
 import { MarketOverview } from '@/components/MarketOverview';
-import { TradingChart } from '@/components/TradingChart';
+import { TradingChart } from '@/components/TradingChartEnhanced';
+import { useMarketData } from '@/hooks/useMarketData';
 import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { useTradingStore } from '@/stores/useTradingStore';
-
-const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
 export default function MarketsPage() {
   const [selectedPair, setSelectedPair] = useState('BTCUSDT');
   const [timeframe, setTimeframe] = useState('1h');
-  const [isLoading, setIsLoading] = useState(true);
   const setPairs = useTradingStore((s) => s.setPairs);
+
+  // Fetch market data for chart
+  const { data: marketData, isLoading: isLoadingChart } = useMarketData({
+    symbol: selectedPair,
+    timeframe,
+    limit: 100,
+  });
 
   useEffect(() => {
     let mounted = true;
 
     async function loadPairs() {
       try {
-        // Prefer same-origin Next API route; fallback to external backend if needed
         const res = await fetch(`/api/trading/pairs`);
         const json = await res.json();
         if (mounted && json?.success && Array.isArray(json.data?.pairs)) {
           setPairs(json.data.pairs);
-        } else {
-          // Try external backend as fallback
-          const res2 = await fetch(
-            `${BACKEND}/api/trading/pairs?category=crypto&limit=20`
-          );
-          const json2 = await res2.json();
-          if (mounted && json2?.success && Array.isArray(json2.data?.pairs)) {
-            setPairs(json2.data.pairs);
-          }
         }
       } catch (err) {
-        // ignore network errors for now
-      } finally {
-        if (mounted) setIsLoading(false);
+        console.error('Error fetching pairs:', err);
       }
     }
 
@@ -47,14 +40,6 @@ export default function MarketsPage() {
       mounted = false;
     };
   }, [setPairs]);
-
-  if (isLoading) {
-    return (
-      <div className='flex items-center justify-center min-h-screen'>
-        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-primary'></div>
-      </div>
-    );
-  }
 
   return (
     <div className='space-y-6 p-6'>

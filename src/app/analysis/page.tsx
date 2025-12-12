@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { TradingChart } from '@/components/TradingChart';
+import { TradingChart } from '@/components/TradingChartEnhanced';
+import { useMarketData } from '@/hooks/useMarketData';
+import { useTradingStore } from '@/stores/useTradingStore';
 
 interface TechnicalIndicators {
   rsi: number;
@@ -16,28 +18,108 @@ interface TechnicalIndicators {
 
 export default function AnalysisPage() {
   const [selectedPair, setSelectedPair] = useState('BTCUSDT');
+  const [timeframe, setTimeframe] = useState('1h');
   const [indicators, setIndicators] = useState<TechnicalIndicators | null>(
     null
   );
   const [isLoading, setIsLoading] = useState(true);
+  const setPairs = useTradingStore((s) => s.setPairs);
+
+  // Fetch market data for chart
+  const { data: marketData, isLoading: isLoadingChart } = useMarketData({
+    symbol: selectedPair,
+    timeframe,
+    limit: 100,
+  });
 
   useEffect(() => {
-    // Simulate loading indicators
-    const timer = setTimeout(() => {
-      setIndicators({
-        rsi: 62.5,
-        macd: { value: 245.6, signal: 238.2, histogram: 7.4 },
-        bollingerBands: { upper: 52300, middle: 50800, lower: 49300 },
-        sma20: 50900,
-        sma50: 49800,
-        ema12: 51200,
-        ema26: 50600,
-        stochastic: { k: 68.5, d: 65.2 },
-      });
-      setIsLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
+    let mounted = true;
+
+    async function loadPairs() {
+      try {
+        const res = await fetch(`/api/trading/pairs`);
+        const json = await res.json();
+        if (mounted && json?.success && Array.isArray(json.data?.pairs)) {
+          setPairs(json.data.pairs);
+        }
+      } catch (err) {
+        console.error('Error fetching pairs:', err);
+      }
+    }
+
+    loadPairs();
+
+    return () => {
+      mounted = false;
+    };
+  }, [setPairs]);
+
+  useEffect(() => {
+    // Fetch real indicators from API
+    const fetchIndicators = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(
+          `/api/trading/indicators/${selectedPair}?timeframe=${timeframe}`
+        );
+        const data = await response.json();
+        
+        if (data.success && data.data?.indicators) {
+          const ind = data.data.indicators;
+          setIndicators({
+            rsi: ind.rsi[ind.rsi.length - 1] || 50,
+            macd: {
+              value: ind.macd.macd[ind.macd.macd.length - 1] || 0,
+              signal: ind.macd.signal[ind.macd.signal.length - 1] || 0,
+              histogram: ind.macd.histogram[ind.macd.histogram.length - 1] || 0,
+            },
+            bollingerBands: {
+              upper: ind.bollingerBands.upper[ind.bollingerBands.upper.length - 1] || 0,
+              middle: ind.bollingerBands.middle[ind.bollingerBands.middle.length - 1] || 0,
+              lower: ind.bollingerBands.lower[ind.bollingerBands.lower.length - 1] || 0,
+            },
+            sma20: ind.sma[ind.sma.length - 1] || 0,
+            sma50: ind.sma[Math.max(0, ind.sma.length - 30)] || 0,
+            ema12: ind.ema[ind.ema.length - 1] || 0,
+            ema26: ind.ema[Math.max(0, ind.ema.length - 14)] || 0,
+            stochastic: {
+              k: ind.stochastic.k[ind.stochastic.k.length - 1] || 50,
+              d: ind.stochastic.d[ind.stochastic.d.length - 1] || 50,
+            },
+          });
+        } else {
+          // Fallback to simulated data if API fails
+          setIndicators({
+            rsi: 62.5,
+            macd: { value: 245.6, signal: 238.2, histogram: 7.4 },
+            bollingerBands: { upper: 52300, middle: 50800, lower: 49300 },
+            sma20: 50900,
+            sma50: 49800,
+            ema12: 51200,
+            ema26: 50600,
+            stochastic: { k: 68.5, d: 65.2 },
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching indicators:', error);
+        // Use fallback data
+        setIndicators({
+          rsi: 62.5,
+          macd: { value: 245.6, signal: 238.2, histogram: 7.4 },
+          bollingerBands: { upper: 52300, middle: 50800, lower: 49300 },
+          sma20: 50900,
+          sma50: 49800,
+          ema12: 51200,
+          ema26: 50600,
+          stochastic: { k: 68.5, d: 65.2 },
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchIndicators();
+  }, [selectedPair, timeframe]);
 
   if (isLoading) {
     return (

@@ -1,0 +1,1 @@
+{"signal_id": "test_signal_001", "symbol": "BTCUSDT", "timeframe": "1h", "signal_type": "BUY", "confidence": 75, "entry_price": 43000, "stop_loss": 42500, "take_profit": 44000, "timestamp": "2025-12-12T21:52:06.899553", "indicators": {}, "ml_prediction": null, "status": "ACTIVE", "outcome": null, "profit_loss": null, "exit_price": null, "exit_time": null}

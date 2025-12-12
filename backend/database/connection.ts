@@ -1,5 +1,6 @@
-import { Pool, PoolClient } from 'pg';
-import { logger } from '../utils/logger';
+import { Pool } from 'pg';
+import type { PoolClient } from 'pg';
+import { logger } from '../utils/logger.ts';
 
 let pool: Pool;
 

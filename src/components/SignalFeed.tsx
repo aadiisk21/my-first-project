@@ -41,6 +41,43 @@ export function SignalFeed({
   const [isExpanded, setIsExpanded] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [localFilter, setLocalFilter] = useState(filter);
+  const [isFetchingSignals, setIsFetchingSignals] = useState(false);
+
+  // Fetch signals from API on mount
+  useEffect(() => {
+    const fetchSignals = async () => {
+      if (signals.length > 0) return; // Already have signals
+      
+      setIsFetchingSignals(true);
+      try {
+        const queryParams = new URLSearchParams({
+          limit: '20',
+          sortBy: 'timestamp',
+          sortOrder: 'desc',
+        });
+
+        const response = await fetch(`/api/signals?${queryParams}`);
+        if (!response.ok) throw new Error('Failed to fetch signals');
+        
+        const result = await response.json();
+        if (result.success && result.data?.signals) {
+          result.data.signals.forEach((signal: any) => {
+            addSignal({
+              ...signal,
+              timestamp: new Date(signal.timestamp),
+              expiresAt: new Date(signal.expiresAt),
+            });
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching signals:', error);
+      } finally {
+        setIsFetchingSignals(false);
+      }
+    };
+
+    fetchSignals();
+  }, []);
 
   // Apply filters and get display signals
   useEffect(() => {

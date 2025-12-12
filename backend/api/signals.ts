@@ -1,8 +1,8 @@
 import express from 'express';
-import { signalRateLimiter } from '../middleware/rateLimiter';
-import { CustomError } from '../middleware/errorHandler';
-import { TradingSignal } from '../../src/types';
-import { SignalGenerator } from '../services/signalGenerator';
+import { signalRateLimiter } from '../middleware/rateLimiter.ts';
+import { CustomError } from '../middleware/errorHandler.ts';
+import type { TradingSignal } from '../../src/types/index';
+import { SignalGenerator } from '../services/signalGenerator.ts';
 
 const router = express.Router();
 const signalGenerator = new SignalGenerator();

@@ -10,7 +10,8 @@ const binanceService_1 = require("../services/binanceService");
 const router = express_1.default.Router();
 const binanceService = new binanceService_1.BinanceService();
 // Get all available trading pairs
-router.get('/pairs', rateLimiter_1.strictRateLimiter, async (req, res) => {
+// Use the general `rateLimiter` (higher limits) for pairs to avoid frequent 429s
+router.get('/pairs', rateLimiter_1.rateLimiter, async (req, res) => {
     try {
         const { category = 'crypto' } = req.query;
         let pairs;

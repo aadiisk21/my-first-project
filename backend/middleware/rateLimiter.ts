@@ -1,10 +1,10 @@
 import rateLimit from 'express-rate-limit';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 
 // General API rate limiting
 export const rateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: 1000, // Increased limit for development
   message: {
     success: false,
     error: 'Too many requests from this IP, please try again later',
@@ -12,12 +12,13 @@ export const rateLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req, res) => process.env.NODE_ENV !== 'production', // Skip in development
   handler: (req: Request, res: Response) => {
     res.status(429).json({
       success: false,
       error: 'Too many requests from this IP, please try again later',
       retryAfter: '15 minutes',
-      limit: 100,
+      limit: 1000,
       windowMs: '15 minutes',
     });
   },
@@ -26,7 +27,7 @@ export const rateLimiter = rateLimit({
 // Strict rate limiting for sensitive endpoints
 export const strictRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
+  max: 500,
   message: {
     success: false,
     error: 'Too many requests to this endpoint, please try again later',
@@ -35,6 +36,7 @@ export const strictRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: false,
+  skip: (req, res) => process.env.NODE_ENV !== 'production', // Skip in development
 });
 
 // WebSocket connection rate limiting

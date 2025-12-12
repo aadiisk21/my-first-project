@@ -1,9 +1,9 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { CustomError } from '../middleware/errorHandler';
-import { executeQuery } from '../database/connection';
-import { cacheService } from '../database/redis';
+import { CustomError } from '../middleware/errorHandler.ts';
+import { executeQuery } from '../database/connection.ts';
+import { cacheService } from '../database/redis.ts';
 
 const router = express.Router();
 
@@ -298,13 +298,11 @@ router.get('/portfolio', async (req, res) => {
       },
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        error:
-          error instanceof Error ? error.message : 'Failed to fetch portfolio',
-      });
+    res.status(500).json({
+      success: false,
+      error:
+        error instanceof Error ? error.message : 'Failed to fetch portfolio',
+    });
   }
 });
 

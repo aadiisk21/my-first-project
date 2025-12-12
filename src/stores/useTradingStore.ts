@@ -80,6 +80,7 @@ export const useTradingStore = create<TradingStore>((set, get) => ({
   },
 
   setMarketData: (pair: string, data: MarketData[]) => {
+    console.log('[useTradingStore] setMarketData called for', pair, 'items:', data?.length);
     set((state) => ({
       marketData: { ...state.marketData, [pair]: data }
     }));

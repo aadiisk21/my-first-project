@@ -1,0 +1,7 @@
+{
+  "symbol": "ETHUSDT",
+  "timeframe": "1h",
+  "trained_at": "2025-12-12T18:52:43.596875",
+  "data_file": "D:\\Project-Bot\\my-first-project\\ml\\data\\ethusdt_1h.csv",
+  "model_file": "D:\\Project-Bot\\my-first-project\\ml\\models\\ethusdt_1h_ensemble.pkl"
+}

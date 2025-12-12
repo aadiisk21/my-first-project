@@ -1,0 +1,7 @@
+{
+  "symbol": "XRPUSDT",
+  "timeframe": "4h",
+  "trained_at": "2025-12-12T20:09:58.460730",
+  "data_file": "D:\\Project-Bot\\my-first-project\\ml\\data\\xrpusdt_4h.csv",
+  "model_file": "D:\\Project-Bot\\my-first-project\\ml\\models\\xrpusdt_4h_ensemble.pkl"
+}

@@ -1,0 +1,109 @@
+{
+  "started_at": "2025-12-12T18:16:28.535820",
+  "symbols": {
+    "BTCUSDT": {
+      "1h": {
+        "success": true,
+        "timestamp": "2025-12-12T18:28:56.073685"
+      },
+      "4h": {
+        "success": true,
+        "timestamp": "2025-12-12T18:32:25.575252"
+      }
+    },
+    "ETHUSDT": {
+      "1h": {
+        "success": true,
+        "timestamp": "2025-12-12T18:52:43.598153"
+      },
+      "4h": {
+        "success": true,
+        "timestamp": "2025-12-12T18:56:51.819286"
+      }
+    },
+    "BNBUSDT": {
+      "1h": {
+        "success": true,
+        "timestamp": "2025-12-12T19:16:09.281340"
+      },
+      "4h": {
+        "success": true,
+        "timestamp": "2025-12-12T19:20:16.081358"
+      }
+    },
+    "SOLUSDT": {
+      "1h": {
+        "success": true,
+        "timestamp": "2025-12-12T19:42:38.564988"
+      },
+      "4h": {
+        "success": true,
+        "timestamp": "2025-12-12T19:46:55.196474"
+      }
+    },
+    "XRPUSDT": {
+      "1h": {
+        "success": true,
+        "timestamp": "2025-12-12T20:05:49.537757"
+      },
+      "4h": {
+        "success": true,
+        "timestamp": "2025-12-12T20:09:58.463610"
+      }
+    },
+    "ADAUSDT": {
+      "1h": {
+        "success": true,
+        "timestamp": "2025-12-12T20:31:47.542102"
+      },
+      "4h": {
+        "success": true,
+        "timestamp": "2025-12-12T20:35:50.470849"
+      }
+    },
+    "DOGEUSDT": {
+      "1h": {
+        "success": true,
+        "timestamp": "2025-12-12T20:56:07.271443"
+      },
+      "4h": {
+        "success": true,
+        "timestamp": "2025-12-12T21:00:04.201562"
+      }
+    },
+    "MATICUSDT": {
+      "1h": {
+        "success": false,
+        "timestamp": "2025-12-12T21:00:10.120243"
+      },
+      "4h": {
+        "success": false,
+        "timestamp": "2025-12-12T21:00:15.492790"
+      }
+    },
+    "DOTUSDT": {
+      "1h": {
+        "success": true,
+        "timestamp": "2025-12-12T21:22:21.217134"
+      },
+      "4h": {
+        "success": true,
+        "timestamp": "2025-12-12T21:26:16.871565"
+      }
+    },
+    "AVAXUSDT": {
+      "1h": {
+        "success": true,
+        "timestamp": "2025-12-12T21:47:13.515887"
+      },
+      "4h": {
+        "success": true,
+        "timestamp": "2025-12-12T21:51:18.127337"
+      }
+    }
+  },
+  "success": 18,
+  "failed": 2,
+  "total": 20,
+  "finished_at": "2025-12-12T21:51:20.133623"
+}

@@ -1,0 +1,7 @@
+{
+  "symbol": "ADAUSDT",
+  "timeframe": "4h",
+  "trained_at": "2025-12-12T20:35:50.199044",
+  "data_file": "D:\\Project-Bot\\my-first-project\\ml\\data\\adausdt_4h.csv",
+  "model_file": "D:\\Project-Bot\\my-first-project\\ml\\models\\adausdt_4h_ensemble.pkl"
+}

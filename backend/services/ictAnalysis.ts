@@ -1,4 +1,4 @@
-import { MarketData, TechnicalIndicators } from '../../src/types';
+import type { MarketData, TechnicalIndicators } from '../../src/types/index';
 
 interface ICTPattern {
   patternType: 'CHOCH' | 'BOS' | 'SWING_HIGH' | 'SWING_LOW' | 'LIQUIDITY_GRAB' | 'FAIR_VALUE_GAP' | 'ORDER_BLOCK' | 'MSSING' | 'INDUCEMENT' | 'BREA' | 'OBT' | 'POI';

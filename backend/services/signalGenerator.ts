@@ -1,9 +1,11 @@
-import {
+import type {
   TradingSignal,
   MarketData,
   TechnicalIndicators,
-} from '../../src/types';
-import { BinanceService } from './binanceService';
+} from '../../src/types/index';
+import { BinanceService } from './binanceService.ts';
+import { MLPredictor } from './mlPredictor.ts';
+import { feedbackTracker } from './feedbackTracker.ts';
 
 interface SignalGenerationOptions {
   symbols: string[];
@@ -28,9 +30,20 @@ interface SignalStats {
 
 export class SignalGenerator {
   private binanceService: BinanceService;
+  private mlPredictor: MLPredictor;
+  private useMachineLearning: boolean = true;
 
   constructor() {
     this.binanceService = new BinanceService();
+    this.mlPredictor = new MLPredictor('BTCUSDT', '1h');
+    
+    // Check if ML model is available
+    this.useMachineLearning = this.mlPredictor.isModelAvailable();
+    if (this.useMachineLearning) {
+      console.log('✅ ML model available - using ensemble predictions');
+    } else {
+      console.log('⚠️  ML model not found - using technical indicators only');
+    }
   }
 
   async generateSignals(
@@ -91,15 +104,76 @@ export class SignalGenerator {
       ]);
 
     const currentPrice = marketData[marketData.length - 1].close;
-    const signalType = this.analyzeMarketCondition(
+    
+    // Get ML prediction if available
+    let mlSignalType: 'BUY' | 'SELL' | 'HOLD' | null = null;
+    let mlConfidence = 0;
+    let mlRationale = '';
+    
+    if (this.useMachineLearning) {
+      try {
+        const mlPrediction = await this.mlPredictor.predict(
+          marketData.map(d => ({
+            time: d.time,
+            open: d.open,
+            high: d.high,
+            low: d.low,
+            close: d.close,
+            volume: d.volume
+          }))
+        );
+        
+        if (mlPrediction.success) {
+          mlSignalType = mlPrediction.signalType;
+          mlConfidence = mlPrediction.confidence;
+          mlRationale = mlPrediction.aiRationale;
+        }
+      } catch (error) {
+        console.error('ML prediction failed, falling back to technical analysis:', error);
+      }
+    }
+    
+    // Get technical analysis signal
+    const technicalSignalType = this.analyzeMarketCondition(
       technicalIndicators,
       riskTolerance
     );
-    const confidence = this.calculateConfidence(
+    const technicalConfidence = this.calculateConfidence(
       technicalIndicators,
-      signalType,
+      technicalSignalType,
       riskTolerance
     );
+    
+    // Combine ML and technical analysis
+    let signalType: 'BUY' | 'SELL' | 'HOLD';
+    let confidence: number;
+    
+    if (mlSignalType && mlConfidence > 0) {
+      // Weight: 60% ML, 40% Technical
+      const mlWeight = 0.6;
+      const technicalWeight = 0.4;
+      
+      // If signals agree, boost confidence
+      if (mlSignalType === technicalSignalType) {
+        signalType = mlSignalType;
+        confidence = mlConfidence * mlWeight + technicalConfidence * technicalWeight;
+        confidence = Math.min(95, confidence * 1.1); // Boost by 10%, cap at 95%
+      } else {
+        // Signals disagree, use ML if confidence is high
+        if (mlConfidence > 70) {
+          signalType = mlSignalType;
+          confidence = mlConfidence * mlWeight + technicalConfidence * technicalWeight;
+        } else {
+          // Low confidence, be conservative
+          signalType = 'HOLD';
+          confidence = 50;
+        }
+      }
+    } else {
+      // No ML available, use technical only
+      signalType = technicalSignalType;
+      confidence = technicalConfidence;
+    }
 
     const { stopLoss, takeProfit } = this.calculateRiskLevels(
       currentPrice,
@@ -112,8 +186,13 @@ export class SignalGenerator {
       technicalIndicators,
       signalType
     );
+    
+    // Combine rationales
+    const aiRationale = mlRationale 
+      ? `🤖 ML Prediction: ${mlRationale}\n\n📊 Technical Analysis: ${technicalRationale}`
+      : technicalRationale;
 
-    return {
+    const signal: TradingSignal = {
       id: `signal_${Date.now()}_${symbol.replace('/', '')}`,
       pair: symbol,
       signalType,
@@ -135,10 +214,17 @@ export class SignalGenerator {
           ] || 0,
         volume: marketData[marketData.length - 1].volume,
       },
-      technicalRationale,
+      technicalRationale: aiRationale,
       riskLevel: this.getRiskLevel(confidence, riskTolerance),
       expiresAt: new Date(Date.now() + this.getExpirationTime(timeframe)),
     };
+    
+    // Record signal for feedback tracking (async, don't wait)
+    feedbackTracker.recordSignal(signal).catch(err => 
+      console.error('Failed to record signal for feedback:', err)
+    );
+    
+    return signal;
   }
 
   private analyzeMarketCondition(

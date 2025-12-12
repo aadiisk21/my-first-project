@@ -1,14 +1,15 @@
 import express from 'express';
-import { strictRateLimiter } from '../middleware/rateLimiter';
-import { CustomError } from '../middleware/errorHandler';
-import { MarketData, TradingPair, TechnicalIndicators } from '../../src/types';
-import { BinanceService } from '../services/binanceService';
+import { strictRateLimiter, rateLimiter } from '../middleware/rateLimiter.ts';
+import { CustomError } from '../middleware/errorHandler.ts';
+import type { MarketData, TradingPair, TechnicalIndicators } from '../../src/types/index';
+import { BinanceService } from '../services/binanceService.ts';
 
 const router = express.Router();
 const binanceService = new BinanceService();
 
 // Get all available trading pairs
-router.get('/pairs', strictRateLimiter, async (req, res) => {
+// Use the general `rateLimiter` (higher limits) for pairs to avoid frequent 429s
+router.get('/pairs', rateLimiter, async (req, res) => {
   try {
     const { category = 'crypto' } = req.query;
 
@@ -49,7 +50,7 @@ router.get('/pairs', strictRateLimiter, async (req, res) => {
 });
 
 // Get real-time price data for a symbol
-router.get('/price/:symbol', strictRateLimiter, async (req, res) => {
+router.get('/price/:symbol', rateLimiter, async (req, res) => {
   try {
     const { symbol } = req.params;
 
@@ -80,7 +81,7 @@ router.get('/price/:symbol', strictRateLimiter, async (req, res) => {
 });
 
 // Get historical market data
-router.get('/history/:symbol', strictRateLimiter, async (req, res) => {
+router.get('/history/:symbol', rateLimiter, async (req, res) => {
   try {
     const { symbol } = req.params;
     const { timeframe = '1h', limit = '100', startDate, endDate } = req.query;
@@ -126,7 +127,7 @@ router.get('/history/:symbol', strictRateLimiter, async (req, res) => {
 });
 
 // Get technical indicators for a symbol
-router.get('/indicators/:symbol', strictRateLimiter, async (req, res) => {
+router.get('/indicators/:symbol', rateLimiter, async (req, res) => {
   try {
     const { symbol } = req.params;
     const { timeframe = '1h', indicators = 'rsi,macd,bollinger,sma,ema' } =

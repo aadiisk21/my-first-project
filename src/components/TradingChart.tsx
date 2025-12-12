@@ -34,6 +34,8 @@ export function TradingChart({
   const currentPrice = useTradingStore((state) => state.currentPrices[symbol]);
   const data = marketData ?? [];
 
+  console.log('[TradingChart] symbol:', symbol, 'marketData length:', data.length, 'marketData sample:', data?.slice(0,3));
+
   // Resize handler
   useEffect(() => {
     const handleResize = () => {
@@ -59,15 +61,26 @@ export function TradingChart({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const cssVar = (key: string) => {
+      const v = getComputedStyle(document.documentElement).getPropertyValue(key).trim();
+      if (!v) return '';
+      if (v.startsWith('#') || v.startsWith('rgb') || v.startsWith('rgba') || v.startsWith('hsl')) return v;
+      return `rgb(${v})`;
+    };
+
+    const rgbaVar = (key: string, a: number) => {
+      const v = getComputedStyle(document.documentElement).getPropertyValue(key).trim();
+      if (!v) return `rgba(0,0,0,${a})`;
+      return `rgba(${v},${a})`;
+    };
+
     const { width, height } = chartSize;
     canvas.width = width * window.devicePixelRatio;
     canvas.height = height * window.devicePixelRatio;
     ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
     // Clear canvas
-    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(
-      '--background'
-    );
+    ctx.fillStyle = cssVar('--background') || '#fff';
     ctx.fillRect(0, 0, width, height);
 
     // Calculate chart dimensions
@@ -84,9 +97,7 @@ export function TradingChart({
     const priceRange = maxPrice - minPrice;
 
     // Draw grid lines
-    ctx.strokeStyle = getComputedStyle(
-      document.documentElement
-    ).getPropertyValue('--border');
+    ctx.strokeStyle = cssVar('--border') || 'rgba(0,0,0,0.06)';
     ctx.lineWidth = 0.5;
     ctx.setLineDash([2, 2]);
 
@@ -99,9 +110,7 @@ export function TradingChart({
 
       // Price labels
       const price = maxPrice - (priceRange / 5) * i;
-      ctx.fillStyle = getComputedStyle(
-        document.documentElement
-      ).getPropertyValue('--muted-foreground');
+      ctx.fillStyle = cssVar('--muted-foreground') || '#666';
       ctx.font = '11px sans-serif';
       ctx.textAlign = 'right';
       ctx.fillText(price.toFixed(4), width - padding.right + 5, y + 3);
@@ -124,13 +133,13 @@ export function TradingChart({
         padding.top + ((maxPrice - candle.close) / priceRange) * chartHeight;
 
       const isGreen = candle.close >= candle.open;
-      const color = isGreen
-        ? getComputedStyle(document.documentElement).getPropertyValue('--buy')
-        : getComputedStyle(document.documentElement).getPropertyValue('--sell');
+      const buyColor = cssVar('--buy') || 'rgb(34,197,94)';
+      const sellColor = cssVar('--sell') || 'rgb(239,68,68)';
+      const color = isGreen ? buyColor : sellColor;
 
       // Highlight hovered candle
       if (hoveredCandle === index) {
-        ctx.fillStyle = color + '20';
+        ctx.fillStyle = isGreen ? rgbaVar('--buy', 0.12) : rgbaVar('--sell', 0.12);
         ctx.fillRect(
           x - candleSpacing / 2,
           padding.top,
@@ -165,7 +174,7 @@ export function TradingChart({
         const volumeHeight = (candle.volume / maxVolume) * (chartHeight * 0.2);
         const volumeY = height - padding.bottom - volumeHeight;
 
-        ctx.fillStyle = isGreen ? color + '60' : color + '40';
+        ctx.fillStyle = isGreen ? rgbaVar('--buy', 0.6) : rgbaVar('--sell', 0.6);
         ctx.fillRect(x - candleWidth / 2, volumeY, candleWidth, volumeHeight);
       }
 
@@ -173,9 +182,7 @@ export function TradingChart({
       if (showIndicators && technicalIndicators) {
         // Draw SMA
         if (technicalIndicators.sma && technicalIndicators.sma[index]) {
-          ctx.strokeStyle = getComputedStyle(
-            document.documentElement
-          ).getPropertyValue('--chart-2');
+          ctx.strokeStyle = cssVar('--chart-2') || '#8b5cf6';
           ctx.lineWidth = 2;
           ctx.beginPath();
           const smaY =
@@ -194,9 +201,7 @@ export function TradingChart({
         if (technicalIndicators.bollingerBands) {
           const { upper, lower } = technicalIndicators.bollingerBands;
           if (upper[index] && lower[index]) {
-            ctx.strokeStyle = getComputedStyle(
-              document.documentElement
-            ).getPropertyValue('--chart-3');
+            ctx.strokeStyle = cssVar('--chart-3') || '#06b6d4';
             ctx.lineWidth = 1;
             ctx.setLineDash([5, 3]);
 
@@ -234,9 +239,7 @@ export function TradingChart({
     if (currentPrice) {
       const currentY =
         padding.top + ((maxPrice - currentPrice) / priceRange) * chartHeight;
-      ctx.strokeStyle = getComputedStyle(
-        document.documentElement
-      ).getPropertyValue('--primary');
+      ctx.strokeStyle = cssVar('--primary') || '#0666ff';
       ctx.lineWidth = 2;
       ctx.setLineDash([5, 3]);
       ctx.beginPath();
@@ -246,13 +249,9 @@ export function TradingChart({
       ctx.setLineDash([]);
 
       // Current price label
-      ctx.fillStyle = getComputedStyle(
-        document.documentElement
-      ).getPropertyValue('--primary');
+      ctx.fillStyle = cssVar('--primary') || '#0666ff';
       ctx.fillRect(width - padding.right - 50, currentY - 10, 50, 20);
-      ctx.fillStyle = getComputedStyle(
-        document.documentElement
-      ).getPropertyValue('--primary-foreground');
+      ctx.fillStyle = cssVar('--primary-foreground') || '#fff';
       ctx.font = 'bold 11px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(
@@ -270,12 +269,8 @@ export function TradingChart({
       const tooltipY = padding.top + 20;
 
       // Tooltip background
-      ctx.fillStyle = getComputedStyle(
-        document.documentElement
-      ).getPropertyValue('--popover');
-      ctx.strokeStyle = getComputedStyle(
-        document.documentElement
-      ).getPropertyValue('--border');
+      ctx.fillStyle = cssVar('--popover') || 'rgba(255,255,255,0.95)';
+      ctx.strokeStyle = cssVar('--border') || 'rgba(0,0,0,0.06)';
       ctx.lineWidth = 1;
 
       const tooltipText = [
@@ -304,9 +299,7 @@ export function TradingChart({
       ctx.stroke();
 
       // Tooltip text
-      ctx.fillStyle = getComputedStyle(
-        document.documentElement
-      ).getPropertyValue('--popover-foreground');
+      ctx.fillStyle = cssVar('--popover-foreground') || '#111';
       ctx.textAlign = 'left';
       tooltipText.forEach((text, index) => {
         ctx.fillText(

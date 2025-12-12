@@ -1,7 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
-import { CustomError } from '../middleware/errorHandler';
-import { TradingSignal, MarketData } from '../../src/types';
+import { CustomError } from '../middleware/errorHandler.ts';
+import type { TradingSignal, MarketData } from '../../src/types/index';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;

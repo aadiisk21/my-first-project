@@ -1,0 +1,28 @@
+{
+  "enabled": true,
+  "schedules": {
+    "fetch_data": {
+      "interval": "1h",
+      "symbols": [
+        "BTCUSDT",
+        "ETHUSDT",
+        "BNBUSDT",
+        "SOLUSDT",
+        "XRPUSDT"
+      ]
+    },
+    "retrain_full": {
+      "interval": "24h",
+      "time": "02:00"
+    },
+    "incremental_update": {
+      "interval": "6h"
+    },
+    "evaluate_performance": {
+      "interval": "12h"
+    }
+  },
+  "min_feedback_samples": 10,
+  "auto_retrain_on_poor_performance": true,
+  "poor_performance_threshold": 40
+}
