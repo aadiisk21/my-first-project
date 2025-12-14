@@ -1,6 +1,7 @@
 import { spawn } from 'child_process';
 import path from 'path';
 import { logger } from '../utils/logger.ts';
+import * as fs from 'fs';
 
 export interface MLPrediction {
   success: boolean;
@@ -48,6 +49,11 @@ export class MLPredictor {
       `${symbol.toLowerCase()}_${timeframe}_ensemble.pkl`
     );
     
+    if (!fs.existsSync(this.modelPath)) {
+      logger.error(`[MLPredictor] Model file not found at: ${this.modelPath}`);
+    } else {
+      logger.info(`MLPredictor found model: ${this.modelPath}`);
+    }
     logger.info(`MLPredictor initialized with model: ${this.modelPath}`);
   }
 
@@ -174,7 +180,6 @@ export class MLPredictor {
    */
   isModelAvailable(): boolean {
     try {
-      const fs = require('fs');
       return fs.existsSync(this.modelPath);
     } catch {
       return false;

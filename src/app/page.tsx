@@ -17,6 +17,8 @@ import {
 export default function Dashboard() {
   const [selectedTimeframe, setSelectedTimeframe] = useState('1h');
   const [selectedPair, setSelectedPair] = useState('BTCUSDT');
+  const [generatedSignal, setGeneratedSignal] = useState(null);
+  const [showSignalModal, setShowSignalModal] = useState(false);
 
   // Select only the pieces of state we need to avoid subscribing to the whole store
   const pairs = useTradingStore((s) => s.pairs);
@@ -108,19 +110,54 @@ export default function Dashboard() {
                   }),
                 });
                 const data = await response.json();
-                if (data.success) {
-                  alert(`Generated ${data.data.signals.length} AI signals!`);
-                  // Refresh signals
-                  window.location.reload();
+                if (data.success && data.data.signals.length > 0) {
+                  setGeneratedSignal(data.data.signals[0]);
+                  setShowSignalModal(true);
+                } else {
+                  alert('No signal generated. Try again later.');
                 }
               } catch (error) {
                 console.error('Error generating signals:', error);
+                alert('Error generating signal.');
               }
             }}
             className='px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm font-medium'
           >
-            🤖 Generate AI Signal
+            🤖 Generate Signal
           </button>
+      {/* Signal Modal */}
+      {showSignalModal && generatedSignal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-2">AI Signal for {generatedSignal.pair}</h2>
+            <div className="mb-2">
+              <span className="font-semibold">Type:</span> {generatedSignal.signalType}
+            </div>
+            <div className="mb-2">
+              <span className="font-semibold">Entry:</span> {generatedSignal.entryPrice}
+            </div>
+            <div className="mb-2">
+              <span className="font-semibold">Take Profit:</span> {generatedSignal.takeProfit ?? 'N/A'}
+            </div>
+            <div className="mb-2">
+              <span className="font-semibold">Stop Loss:</span> {generatedSignal.stopLoss ?? 'N/A'}
+            </div>
+            <div className="mb-2">
+              <span className="font-semibold">Confidence:</span> {generatedSignal.confidence}%
+            </div>
+            <div className="mb-2">
+              <span className="font-semibold">Rationale:</span>
+              <div className="text-xs whitespace-pre-line mt-1">{generatedSignal.technicalRationale}</div>
+            </div>
+            <button
+              className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
+              onClick={() => setShowSignalModal(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
           <button className='relative p-2 text-muted-foreground hover:text-foreground transition-colors'>
             <BellIcon className='h-5 w-5' />
